@@ -1,0 +1,69 @@
+#!/bin/sh
+set -eu
+
+prefix=${PREFIX:-"${HOME}/.local"}
+data_home=${XDG_DATA_HOME:-"${HOME}/.local/share"}
+config_home=${XDG_CONFIG_HOME:-"${HOME}/.config"}
+state_home=${XDG_STATE_HOME:-"${HOME}/.local/state"}
+cache_home=${XDG_CACHE_HOME:-"${HOME}/.cache"}
+app_dir="$data_home/cyber-wall"
+config_dir="$config_home/cyber-wall"
+state_dir="$state_home/cyber-wall"
+cache_dir="$cache_home/cyber-wall"
+purge=0
+
+usage() {
+    printf '%s\n' 'Usage: cyber-wall-uninstall [--purge]'
+    printf '%s\n' '  Default: remove cyber-wall commands and program files; keep config, wallpaper state, and cache.'
+    printf '%s\n' '  --purge: also delete cyber-wall config, state, and cache after confirmation.'
+}
+
+case "${1:-}" in
+    "") ;;
+    --purge) purge=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+esac
+
+if [ "$purge" -eq 1 ]; then
+    printf '%s\n' 'This will remove cyber-wall configuration and saved wallpaper state. Continue? Type cyber-wall to confirm: '
+    IFS= read -r confirmation || exit 1
+    if [ "$confirmation" != cyber-wall ]; then
+        printf '%s\n' 'Cancelled; nothing was removed.'
+        exit 1
+    fi
+fi
+
+if [ -x "$prefix/bin/cyber-wall-toggle" ]; then
+    "$prefix/bin/cyber-wall-toggle" --stop || {
+        printf '%s\n' 'Could not close the cyber-wall picker; aborting uninstall.' >&2
+        exit 1
+    }
+fi
+if [ -x "$prefix/bin/cyber-wall-set" ]; then
+    "$prefix/bin/cyber-wall-set" --stop || {
+        printf '%s\n' 'Could not stop the cyber-wall wallpaper cleanly; aborting uninstall to avoid orphaning it.' >&2
+        exit 1
+    }
+fi
+
+for command in cyber-wall cyber-wall-set cyber-wall-toggle cyber-wall-uninstall; do
+    rm -f -- "$prefix/bin/$command"
+done
+rm -rf -- "$app_dir"
+
+if [ "$purge" -eq 1 ]; then
+    rm -rf -- "$config_dir" "$state_dir"
+    rm -rf -- "$cache_dir"
+fi
+
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    rmdir -- "$XDG_RUNTIME_DIR/cyber-wall" 2>/dev/null || true
+fi
+
+printf '%s\n' 'cyber-wall commands and program files removed.'
+if [ "$purge" -eq 0 ]; then
+    printf 'Preserved config, wallpaper state, and cache. To remove settings too, run: cyber-wall-uninstall --purge\n'
+else
+    printf '%s\n' 'cyber-wall config, saved state, and cache removed. Hyprland and Hyprlock configuration files were not edited.'
+fi

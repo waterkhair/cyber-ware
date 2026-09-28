@@ -1,0 +1,19 @@
+{
+  "directories": [
+    "~/Pictures/Wallpapers",
+    "~/Videos/Wallpapers"
+  ],
+  "output": "auto",
+  "default_wallpaper": null,
+  "mpvpaper_options": [
+    "no-audio",
+    "--quiet",
+    "--msg-level=all=warn",
+    "--loop-file=inf",
+    "--image-display-duration=inf",
+    "--keep-open=yes",
+    "--hwdec=auto"
+  ],
+  "preview_seek_seconds": 0.5,
+  "preview_timeout_seconds": 8
+}

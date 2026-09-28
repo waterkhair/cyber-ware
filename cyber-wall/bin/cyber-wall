@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -d "$script_dir/../src/cyber_wall" ]; then
+    app_home=$(CDPATH= cd -- "$script_dir/.." && pwd)
+else
+    app_home="${CYBER_WALL_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/cyber-wall}"
+fi
+export CYBER_WALL_HOME="$app_home"
+export PYTHONPATH="$app_home/src${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m cyber_wall.picker "$@"
