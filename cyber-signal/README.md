@@ -41,16 +41,15 @@ By default, the command is installed in `~/.local/bin`, application code in
 `~/.config/systemd/user`. Set `PREFIX` to install the command elsewhere. The
 installer does not overwrite an existing config file.
 
-The installer generates the selected theme at
-`~/.config/cyber-signal/active.mako` and, when Mako is installed, adds a
-clearly marked include block to `~/.config/mako/config` and reloads Mako if it
-is running. It preserves the rest of your Mako config. Mako applies these
-rules only to notifications whose app name is
-`cyber-signal`; other applications retain their existing appearance. The
-scoped rules use Mako's app-name criteria and normal notification style
-options. See the [Mako configuration manual](https://github.com/emersion/mako/blob/master/doc/mako.5.scd).
-If Mako is absent, the theme file is still installed but cannot be applied
-until you install Mako and add an include for `active.mako` to its config.
+When Mako is installed, the installer adds the selected app-scoped rules in a
+clearly marked block at the end of `~/.config/mako/config`, then reloads Mako
+if it is running. It preserves your other Mako settings. Mako applies these
+rules only to notifications whose app name is `cyber-signal`; other
+applications retain their existing appearance. The rules use Mako's app-name
+criteria and normal style options. See the [Mako configuration
+manual](https://github.com/emersion/mako/blob/master/doc/mako.5.scd). If Mako
+is absent, cyber-signal still works, but its Mako theme cannot be applied until
+Mako is installed.
 
 ## Start and use
 
@@ -69,7 +68,7 @@ cyber-signal --status                # show config and user-unit status
 cyber-signal --check network         # report current NetworkManager state
 cyber-signal --check updates         # check for changed/new Arch updates
 cyber-signal --check disk            # check configured mounts and alert on threshold crossings
-cyber-signal --theme                 # show selected theme and include target
+cyber-signal --theme                 # show selected theme and Mako config path
 cyber-signal --theme greenline       # select terminal phosphor-green
 cyber-signal --theme synthwave       # select muted purple/pink synthwave
 cyber-signal --disable               # stop and disable monitoring
@@ -112,9 +111,8 @@ internet access). Update checks use Arch's `checkupdates`; this tool only
 notifies and never installs updates.
 
 The two Mako theme source files are in `src/cyber_signal/themes/`. Switching
-with `cyber-signal --theme NAME` updates the generated `active.mako` and asks
-Mako to reload when `makoctl` is present. If you do not include that generated
-file in Mako's config, notifications still work with your normal Mako theme.
+with `cyber-signal --theme NAME` updates the selected theme and the managed
+Mako style block, then asks Mako to reload when `makoctl` is present.
 
 ## Troubleshooting
 
@@ -136,9 +134,9 @@ cyber-signal --uninstall
 
 This stops and disables the component's user units, removes those unit files,
 the one command, and application code. Configuration, generated Mako theme,
-and state are preserved. The installer-managed Mako include block is removed,
-while all other Mako settings remain. Any include you added manually outside
-that block is left untouched.
+and state are preserved. The installer-managed Mako style block is removed,
+while all other Mako settings remain. Any custom Mako rules you added outside
+that block are left untouched.
 
 To also remove cyber-signal's settings, generated theme, and saved state:
 

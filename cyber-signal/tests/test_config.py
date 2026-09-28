@@ -50,6 +50,18 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.title, "2 package updates available")
 
+    def test_theme_sync_appends_valid_managed_mako_rules(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"XDG_CONFIG_HOME": directory}), \
+             patch.object(cli.shutil, "which", return_value="/usr/bin/mako"):
+            mako_config = Path(directory) / "mako/config"
+            mako_config.parent.mkdir()
+            mako_config.write_text("[urgency=normal]\nborder-color=#ff00ff\n")
+            self.assertTrue(cli._write_mako_styles("[app-name=\"cyber-signal\"]\ntext-color=#b7f7c0\n"))
+            result = mako_config.read_text()
+            self.assertIn("# END cyber-signal managed theme\n", result)
+            self.assertGreater(result.index("[app-name=\"cyber-signal\"]"), result.index("[urgency=normal]"))
+            self.assertNotIn("include=", result)
+
     def test_uninstall_removes_only_managed_mako_block(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"XDG_CONFIG_HOME": directory}), \
              patch.object(cli.shutil, "which", return_value=None):
@@ -62,7 +74,7 @@ class ConfigTests(unittest.TestCase):
                 "# END cyber-signal managed theme\n"
                 "text-color=#ffffff\n"
             )
-            self.assertTrue(cli._remove_mako_include())
+            self.assertTrue(cli._remove_mako_block())
             self.assertEqual(mako_config.read_text(), "background-color=#111111\ntext-color=#ffffff\n")
 
 

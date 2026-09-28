@@ -54,29 +54,6 @@ if [ -f "$config_home/cyber-signal/config.json" ]; then
 fi
 install -m 644 "$app_dir/src/cyber_signal/themes/$theme.mako" "$config_home/cyber-signal/active.mako"
 
-# Add a component-owned include without replacing the user's Mako palette or
-# other rules. The marked block is removed during uninstall.
-mako_config="$config_home/mako/config"
-mako_start='# BEGIN cyber-signal managed theme'
-mako_end='# END cyber-signal managed theme'
-if command -v makoctl >/dev/null 2>&1 || command -v mako >/dev/null 2>&1; then
-    mkdir -p "$config_home/mako"
-    if ! grep -Fqx "$mako_start" "$mako_config" 2>/dev/null \
-        && ! grep -Fqx "include=$config_home/cyber-signal/active.mako" "$mako_config" 2>/dev/null; then
-        {
-            [ ! -f "$mako_config" ] || [ ! -s "$mako_config" ] || printf '\n'
-            printf '%s\n' "$mako_start"
-            printf 'include=%s/cyber-signal/active.mako\n' "$config_home"
-            printf '%s\n' "$mako_end"
-        } >> "$mako_config"
-    fi
-    if command -v makoctl >/dev/null 2>&1; then
-        makoctl reload >/dev/null 2>&1 || printf '%s\n' 'Mako is not running; the theme include will load next time it starts.'
-    fi
-else
-    printf '%s\n' 'Mako is not installed; its optional theme is present but cannot be applied yet.' >&2
-fi
-
 escape_sed() { printf '%s' "$1" | sed 's/[\\&#]/\\&/g'; }
 exec_path=$(escape_sed "$prefix/bin/cyber-signal")
 for template in "$project_dir"/systemd/user/*.in; do
@@ -85,6 +62,7 @@ for template in "$project_dir"/systemd/user/*.in; do
 done
 printf '{"executable":"%s"}\n' "$prefix/bin/cyber-signal" > "$app_dir/install.json"
 chmod 600 "$app_dir/install.json"
+"$prefix/bin/cyber-signal" --theme "$theme"
 
 if ! command -v nmcli >/dev/null 2>&1; then
     printf '%s\n' 'Optional: nmcli is missing; network notifications need NetworkManager.' >&2

@@ -1,5 +1,5 @@
 # cyber-signal theme: synthwave
-# Include this file from ~/.config/mako/config; selectors only affect this app.
+# This app-scoped stylesheet is copied into the managed Mako rules block.
 [app-name="cyber-signal"]
 background-color=#17131f
 text-color=#e8e5f0

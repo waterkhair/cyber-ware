@@ -19,7 +19,7 @@ Usage:
   cyber-signal --check network|updates|disk  Run a check once
   cyber-signal --watch network               Monitor network state changes
   cyber-signal --test                        Send a preview notification
-  cyber-signal --theme [synthwave|greenline] Show or change Mako theme
+  cyber-signal --theme [synthwave|greenline] Show or change the Mako theme
   cyber-signal --enable                      Enable user services and timers
   cyber-signal --disable                     Stop and disable user services
   cyber-signal --status                      Show component status
@@ -35,7 +35,7 @@ def _theme(name: str | None) -> int:
     if name is None:
         print(f"Current theme: {config['theme']}")
         print(f"Available themes: {' | '.join(THEMES)}")
-        print(f"Mako include target: {config_dir() / 'active.mako'}")
+        print(f"Mako config: {config_home() / 'mako/config'}")
         return 0
     if name not in THEMES:
         raise ValueError(f"theme must be one of: {', '.join(THEMES)}")
@@ -44,13 +44,24 @@ def _theme(name: str | None) -> int:
         raise RuntimeError(f"bundled theme file is missing: {source}")
     config_dir().mkdir(parents=True, exist_ok=True)
     active = config_dir() / "active.mako"
-    active.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    theme_text = source.read_text(encoding="utf-8")
+    active.write_text(theme_text, encoding="utf-8")
     config["theme"] = name
     atomic_json(config_dir() / "config.json", config)
+
+    mako_config = _write_mako_styles(theme_text)
     makoctl = shutil.which("makoctl")
-    if makoctl:
-        subprocess.run([makoctl, "reload"], check=False)
-    print(f"Theme set to {name}; Mako include: include={active}")
+    if mako_config and makoctl:
+        reload_result = subprocess.run([makoctl, "reload"], check=False,
+                                       text=True, capture_output=True)
+        if reload_result.returncode != 0:
+            detail = (reload_result.stderr or reload_result.stdout).strip()
+            print(f"Theme files were updated, but Mako could not reload: {detail or 'unknown error'}",
+                  file=sys.stderr)
+            return 1
+    elif not mako_config:
+        print("Mako is not installed; the theme is saved but cannot be applied yet.", file=sys.stderr)
+    print(f"Theme set to {name}; Mako styles: {config_home() / 'mako/config'}")
     return 0
 
 
@@ -117,8 +128,51 @@ def _status() -> int:
     return 0
 
 
-def _remove_mako_include() -> bool:
-    """Remove only the installer-owned include block, preserving other config."""
+def _write_mako_styles(theme_text: str) -> bool:
+    """Replace cyber-signal's marked style block, leaving other Mako rules intact."""
+    if not (shutil.which("mako") or shutil.which("makoctl")):
+        return False
+    path = config_home() / "mako/config"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        original = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        original = ""
+
+    start = "# BEGIN cyber-signal managed theme"
+    end = "# END cyber-signal managed theme"
+    legacy_include = f"include={config_dir() / 'active.mako'}"
+    output: list[str] = []
+    in_block = False
+    for line in original.splitlines(keepends=True):
+        marker = line.rstrip("\r\n")
+        if marker == start:
+            if in_block:
+                raise RuntimeError("Mako config contains nested cyber-signal theme markers")
+            in_block = True
+            continue
+        if in_block:
+            if marker == end:
+                in_block = False
+            continue
+        if marker == legacy_include:
+            continue
+        output.append(line)
+    if in_block:
+        raise RuntimeError("Mako config has an incomplete cyber-signal theme block; it was left unchanged")
+
+    base = "".join(output)
+    if base and not base.endswith("\n"):
+        base += "\n"
+    if base and not base.endswith("\n\n"):
+        base += "\n"
+    block = f"{start}\n{theme_text.rstrip()}\n{end}\n"
+    path.write_text(base + block, encoding="utf-8")
+    return True
+
+
+def _remove_mako_block() -> bool:
+    """Remove only cyber-signal's installer-owned Mako block."""
     path = config_home() / "mako/config"
     try:
         original = path.read_text(encoding="utf-8")
@@ -126,6 +180,7 @@ def _remove_mako_include() -> bool:
         return False
     start = "# BEGIN cyber-signal managed theme"
     end = "# END cyber-signal managed theme"
+    legacy_include = f"include={config_dir() / 'active.mako'}"
     output: list[str] = []
     in_block = False
     removed = False
@@ -138,6 +193,9 @@ def _remove_mako_include() -> bool:
         if in_block:
             if marker == end:
                 in_block = False
+            continue
+        if marker == legacy_include:
+            removed = True
             continue
         output.append(line)
     if in_block:
@@ -176,12 +234,12 @@ def _uninstall(args: list[str]) -> int:
         _systemctl("daemon-reload")
     executable.unlink(missing_ok=True)
     shutil.rmtree(app_dir(), ignore_errors=True)
-    removed_mako_include = _remove_mako_include()
+    removed_mako_block = _remove_mako_block()
     print("Removed cyber-signal command, application files, and user service units.")
-    if removed_mako_include:
-        print("Removed cyber-signal's managed Mako include; all other Mako settings were preserved.")
+    if removed_mako_block:
+        print("Removed cyber-signal's managed Mako styles; all other Mako settings were preserved.")
     else:
-        print("No managed Mako include found; Mako config was preserved.")
+        print("No managed Mako style block found; Mako config was preserved.")
     if purge:
         shutil.rmtree(config_dir(), ignore_errors=True)
         shutil.rmtree(state_dir(), ignore_errors=True)
