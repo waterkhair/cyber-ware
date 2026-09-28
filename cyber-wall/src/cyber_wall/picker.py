@@ -4,10 +4,9 @@
 from __future__ import annotations
 
 import hashlib
-import os
-import shutil
 import signal
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -25,9 +24,6 @@ WALLPAPER_DIRS = tuple(expand_path(path) for path in CONFIG["directories"])
 STATE_DIR = cache_dir()
 THUMBNAIL_DIR = STATE_DIR / "thumbnails"
 THEME_CSS = Path(__file__).with_name("themes") / f"{CONFIG['theme']}.css"
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-APP_HOME = Path(os.environ.get("CYBER_WALL_HOME", PROJECT_ROOT))
-SETTER = shutil.which("cyber-wall-set") or str(APP_HOME / "bin" / "cyber-wall-set")
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".mov", ".avi"}
 
@@ -369,7 +365,7 @@ class WallpaperPicker(Gtk.Application):
     def _apply_item(self, item: dict[str, object]) -> None:
         path = Path(item["path"])
         subprocess.Popen(
-            [str(SETTER), str(path)],
+            [sys.executable, "-m", "cyber_wall.cli", "--set", str(path)],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

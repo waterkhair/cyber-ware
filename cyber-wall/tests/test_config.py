@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from cyber_wall.config import DEFAULTS, config_path, load_config
+from cyber_wall.config import DEFAULTS, config_path, load_config, set_theme
 
 
 class ConfigTests(unittest.TestCase):
@@ -35,6 +35,26 @@ class ConfigTests(unittest.TestCase):
             with patch.dict(os.environ, {"CYBER_WALL_CONFIG": str(path)}):
                 config = load_config()
         self.assertEqual(config["theme"], "greenline")
+
+    def test_set_theme_preserves_other_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps({"directories": ["~/Wallpapers"], "output": "DP-1"}))
+            with patch.dict(os.environ, {"CYBER_WALL_CONFIG": str(path)}):
+                set_theme("greenline")
+            config = json.loads(path.read_text())
+        self.assertEqual(config["theme"], "greenline")
+        self.assertEqual(config["directories"], ["~/Wallpapers"])
+        self.assertEqual(config["output"], "DP-1")
+
+    def test_set_theme_rejects_unknown_theme(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps({"theme": "synthwave"}))
+            with patch.dict(os.environ, {"CYBER_WALL_CONFIG": str(path)}):
+                with self.assertRaisesRegex(ValueError, "theme"):
+                    set_theme("unknown")
+            self.assertEqual(json.loads(path.read_text())["theme"], "synthwave")
 
     def test_rejects_invalid_directory_value(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

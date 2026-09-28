@@ -1,40 +1,40 @@
-/* Restrained monochrome terminal palette with a subdued phosphor-green accent. */
+/* Classic phosphor-green terminal palette, kept readable without glow effects. */
 window {
     background: transparent;
 }
 
 #shell {
-    background: #0b0e0b;
+    background: #080d09;
     border: none;
     border-radius: 16px;
     padding: 18px;
 }
 
 #title {
-    color: #a6b4a4;
+    color: #c1ffad;
     font-size: 20px;
     font-weight: bold;
 }
 
 #subtitle, #hint {
-    color: #788278;
+    color: #8cc987;
 }
 
 #preview-frame {
-    background: #121712;
-    border: 2px solid #52634f;
+    background: #101a12;
+    border: 2px solid #65c96d;
     border-radius: 11px;
     padding: 8px;
 }
 
 #preview {
-    background: #070907;
+    background: #050906;
     border-radius: 7px;
 }
 
 #media-badge {
-    background: #394739;
-    color: #d0d8ce;
+    background: #34783d;
+    color: #dcffd3;
     border-radius: 6px;
     padding: 3px 8px;
     margin: 10px;
@@ -42,47 +42,47 @@ window {
 }
 
 #media-badge.image-badge {
-    background: #343b35;
-    color: #c3cbc2;
+    background: #315c36;
+    color: #d1f5c9;
 }
 
 entry {
-    background: #121712;
-    color: #c3cbc2;
-    border: 1px solid #536350;
+    background: #101a12;
+    color: #ccffc1;
+    border: 1px solid #65c96d;
     border-radius: 8px;
     padding: 7px 10px;
 }
 
 entry:focus {
-    border-color: #82917d;
+    border-color: #a0f296;
 }
 
 list {
-    background: #0b0e0b;
+    background: #080d09;
 }
 
 row {
-    color: #c3cbc2;
+    color: #ccffc1;
     border-radius: 7px;
     padding: 7px 10px;
 }
 
 row:hover {
-    background: #171e17;
+    background: #1b3020;
 }
 
 row:selected {
-    background: #263126;
-    color: #e0e6dd;
+    background: #34783d;
+    color: #edffe8;
 }
 
 .badge {
-    color: #91a28d;
+    color: #abff94;
     min-width: 58px;
     font-weight: bold;
 }
 
 .badge-video {
-    color: #a19d87;
+    color: #9cec88;
 }

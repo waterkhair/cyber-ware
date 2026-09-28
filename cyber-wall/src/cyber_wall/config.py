@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
 
-AVAILABLE_THEMES = ("synthwave", "greenline")
+AVAILABLE_THEMES = ("greenline", "synthwave")
 
 
 DEFAULTS: dict[str, Any] = {
@@ -57,6 +58,32 @@ def runtime_dir() -> Path:
 
 def expand_path(value: str | os.PathLike[str]) -> Path:
     return Path(os.path.expandvars(os.fspath(value))).expanduser()
+
+
+def set_theme(theme: str) -> None:
+    """Persist one of the bundled themes without discarding user settings."""
+    if theme not in AVAILABLE_THEMES:
+        raise ValueError(f"theme must be one of: {', '.join(AVAILABLE_THEMES)}")
+
+    path = config_path()
+    current = load_config()
+    if path.exists():
+        current = json.loads(path.read_text(encoding="utf-8"))
+    current["theme"] = theme
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=path.parent, prefix="config.", suffix=".tmp", delete=False
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            json.dump(current, temporary, indent=2, ensure_ascii=False)
+            temporary.write("\n")
+        temporary_path.chmod(0o600)
+        os.replace(temporary_path, path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def load_config() -> dict[str, Any]:

@@ -9,4 +9,4 @@ else
 fi
 export CYBER_WALL_HOME="$app_home"
 export PYTHONPATH="$app_home/src${PYTHONPATH:+:$PYTHONPATH}"
-exec python3 -m cyber_wall.picker "$@"
+exec python3 -m cyber_wall.cli "$@"

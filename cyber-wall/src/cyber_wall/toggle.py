@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
-import shutil
 import signal
 import sys
+import time
 from pathlib import Path
 
 
@@ -32,31 +32,25 @@ def _picker_pids() -> list[int]:
     return matches
 
 
-def main() -> int:
-    if sys.argv[1:] == ["--stop"]:
-        for pid in _picker_pids():
-            try:
-                os.kill(pid, signal.SIGTERM)
-            except ProcessLookupError:
-                continue
-        return 0
-    if sys.argv[1:]:
-        print("usage: cyber-wall-toggle [--stop]", file=sys.stderr)
-        return 2
-
-    for pid in _picker_pids():
+def stop_picker() -> None:
+    pids = _picker_pids()
+    for pid in pids:
         try:
             os.kill(pid, signal.SIGTERM)
         except ProcessLookupError:
-            continue
+            pass
+    deadline = time.monotonic() + 3
+    while time.monotonic() < deadline:
+        if not any(Path(f"/proc/{pid}").exists() for pid in pids):
+            return
+        time.sleep(0.05)
+    if any(Path(f"/proc/{pid}").exists() for pid in pids):
+        raise RuntimeError("the picker did not exit within three seconds")
+
+
+def toggle() -> int:
+    if _picker_pids():
+        stop_picker()
         return 0
-
-    launcher = shutil.which("cyber-wall")
-    if launcher is None:
-        launcher = str(Path(sys.argv[0]).resolve().parents[2] / "bin" / "cyber-wall")
-    os.execv(launcher, [launcher])
+    os.execv(sys.executable, [sys.executable, "-m", "cyber_wall.picker"])
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

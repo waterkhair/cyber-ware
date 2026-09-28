@@ -209,17 +209,13 @@ def stop_wallpaper() -> None:
     raise RuntimeError(f"managed mpvpaper process {pid} did not stop; leaving its state files intact")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Set or restore an mpvpaper wallpaper")
     parser.add_argument("wallpaper", nargs="?", help="image or video file to apply")
     parser.add_argument("--restore", action="store_true", help="restore the previous choice")
-    parser.add_argument("--stop", action="store_true", help="stop cyber-wall's managed mpvpaper process")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
-        if args.stop:
-            stop_wallpaper()
-            return 0
         config = load_config()
         target: str | None = args.wallpaper
         if args.restore:

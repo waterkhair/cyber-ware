@@ -56,13 +56,13 @@ if [ ! -f "$project_dir/src/cyber_wall/picker.py" ]; then
     fi
 fi
 
-mkdir -p "$prefix/bin" "$app_dir/src" "$app_dir/bin"
+mkdir -p "$prefix/bin" "$app_dir/src"
+# Replace only cyber-wall-owned application files; preserve config and state.
+rm -rf -- "$app_dir/src/cyber_wall" "$app_dir/bin"
 cp -R "$project_dir/src/cyber_wall" "$app_dir/src/"
-cp "$project_dir"/bin/cyber-wall "$project_dir"/bin/cyber-wall-set "$project_dir"/bin/cyber-wall-toggle "$project_dir"/bin/cyber-wall-uninstall "$app_dir/bin/"
-chmod 755 "$app_dir/bin/cyber-wall" "$app_dir/bin/cyber-wall-set" "$app_dir/bin/cyber-wall-toggle" "$app_dir/bin/cyber-wall-uninstall"
-for command in cyber-wall cyber-wall-set cyber-wall-toggle cyber-wall-uninstall; do
-    install -m 755 "$project_dir/bin/$command" "$prefix/bin/$command"
-done
+install -m 755 "$project_dir/bin/cyber-wall" "$prefix/bin/cyber-wall"
+# Remove obsolete entry points from installations made by earlier versions.
+rm -f -- "$prefix/bin/cyber-wall-set" "$prefix/bin/cyber-wall-toggle" "$prefix/bin/cyber-wall-uninstall"
 
 config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/cyber-wall"
 mkdir -p "$config_dir"
@@ -72,5 +72,5 @@ fi
 
 printf 'Installed cyber-wall commands in %s/bin\n' "$prefix"
 printf 'Configuration: %s/config.json\n' "$config_dir"
-printf '%s\n' 'Uninstall with cyber-wall-uninstall; use --purge only if you also want to remove cyber-wall settings and saved data.'
-printf '%s\n' 'Make sure the install bin directory is on PATH. Start with: cyber-wall-toggle'
+printf '%s\n' 'Uninstall with cyber-wall --uninstall; add --purge only if you also want to remove cyber-wall settings and saved data.'
+printf '%s\n' 'Make sure the install bin directory is on PATH. Start with: cyber-wall'

@@ -48,13 +48,21 @@ package manager first. `ffmpeg` is optional but needed for video thumbnails.
 Commands:
 
 ```sh
-cyber-wall-toggle                 # show/hide the picker
-cyber-wall-set ~/Pictures/wall.jpg
-cyber-wall-set ~/Videos/wall.mp4
-cyber-wall-set --restore          # restore the last choice
-cyber-wall-uninstall              # uninstall, keeping personal data
-cyber-wall-uninstall --purge      # confirm then remove config and saved data too
+cyber-wall                                  # toggle the picker
+cyber-wall --set ~/Pictures/wall.jpg       # apply an image
+cyber-wall --set ~/Videos/wall.mp4          # apply a video
+cyber-wall --set --restore                 # restore the last choice
+cyber-wall --theme                         # show current and available themes
+cyber-wall --theme greenline               # use greenline (or synthwave)
+cyber-wall --uninstall                     # uninstall, keep personal data
+cyber-wall --uninstall --purge             # confirm, then remove saved data too
 ```
+
+The single `cyber-wall` command is the only installed entry point. `--theme`
+updates the config while preserving the other settings; close and reopen the
+picker to apply a theme change. `--uninstall` stops the picker and the
+cyber-wall-managed mpvpaper process before removing the command and app files.
+It preserves config, wallpaper state, and cache unless `--purge` is requested.
 
 ## Configure
 
@@ -81,15 +89,16 @@ invocation. `cyber-wall` never reads or edits your Hyprlock configuration. Choos
 or update your lock-screen wallpaper separately in your Hyprlock setup.
 
 The default visual template is `synthwave`. The optional `greenline` theme is a
-quiet, text-first terminal look: near-black surfaces, soft gray-green text, and
-muted sage accents rather than bright phosphor green or glow effects. Both
-themes are plain GTK CSS; wallpaper thumbnails remain ordinary images. Their
-stylesheets live in `src/cyber_wall/themes/`, separate from picker behavior.
+monochrome terminal look with classic phosphor-green text and accents on deep
+near-black surfaces. It has no glow effects; wallpaper thumbnails remain
+ordinary images. Both themes are plain GTK CSS, with stylesheets in
+`src/cyber_wall/themes/`, separate from picker behavior.
 
-To switch themes, change the `theme` value in
-`~/.config/cyber-wall/config.json` to `"greenline"` or `"synthwave"`, then
-close and reopen the picker. Existing configurations keep their current theme;
-new installations continue to default to `synthwave`.
+Switch themes with `cyber-wall --theme greenline` or
+`cyber-wall --theme synthwave`, then close and reopen the picker. Running
+`cyber-wall --theme` prints the current and available themes. Existing
+configurations keep their current theme; new installations default to
+`synthwave`.
 
 The picker supports arrow keys and Ctrl+J/Ctrl+K for navigation, Enter to
 apply, and Escape to close. It remembers the last selection in
@@ -102,15 +111,15 @@ Add a key binding and a startup restore to your Hyprland config. For a Lua
 config using `hl` helpers, adapt the commands to your configuration API:
 
 ```lua
-hl.bind("$mainMod SHIFT, W", "exec, cyber-wall-toggle")
-hl.exec_cmd("cyber-wall-set --restore")
+hl.bind("$mainMod SHIFT, W", "exec, cyber-wall")
+hl.exec_cmd("cyber-wall --set --restore")
 ```
 
 Traditional Hyprland syntax:
 
 ```ini
-bind = SUPER SHIFT, W, exec, cyber-wall-toggle
-exec-once = cyber-wall-set --restore
+bind = SUPER SHIFT, W, exec, cyber-wall
+exec-once = cyber-wall --set --restore
 ```
 
 ### Make the picker a centered floating window
@@ -154,20 +163,19 @@ See the [Hyprland window-rules documentation](https://wiki.hypr.land/configuring
 for syntax details and options for your installed Hyprland version.
 
 This rule only controls placement. Use a separate Hyprland key binding to
-launch `cyber-wall-toggle`; the installer does not add or change shortcuts.
+launch `cyber-wall`; the installer does not add or change shortcuts.
 
 ## Uninstall
 
-Run `cyber-wall-uninstall` to stop the `cyber-wall` picker and managed `mpvpaper`
-process, then remove the four commands from the selected `PREFIX/bin` and the
-application code under `$XDG_DATA_HOME/cyber-wall`. By default, config, last
-wallpaper state, logs, and cached previews are preserved so reinstalling keeps
-your settings.
+Run `cyber-wall --uninstall` to stop the picker and managed `mpvpaper` process,
+then remove the single command from `PREFIX/bin` and the application code under
+`$XDG_DATA_HOME/cyber-wall`. By default, config, last wallpaper state, logs, and
+cached previews are preserved so reinstalling keeps your settings.
 
-Run `cyber-wall-uninstall --purge` to additionally remove the `cyber-wall` config,
-state, and cache. It asks you to type `cyber-wall` before proceeding. The script
-never edits Hyprland or Hyprlock config files, and never removes system
-packages. If you manually added Hyprland bindings, remove those yourself.
+Run `cyber-wall --uninstall --purge` to additionally remove the `cyber-wall`
+config, state, and cache. It asks you to type `cyber-wall` before proceeding.
+The command never edits Hyprland or Hyprlock config files, and never removes
+system packages. If you manually added Hyprland bindings, remove those yourself.
 
 ## Development
 
@@ -179,8 +187,8 @@ PYTHONPATH=src python -m compileall -q src tests
 ```
 
 On the maintainer's current CachyOS/Hyprland setup, the existing
-Ctrl+Super+Alt+W binding launches `cyber-wall-toggle`, and startup restore uses
-`cyber-wall-set --restore`. This personal compositor configuration is not
+Ctrl+Super+Alt+W binding launches `cyber-wall`, and startup restore uses
+`cyber-wall --set --restore`. This personal compositor configuration is not
 installed or modified by the component scripts. Hyprlock's background is
 configured separately and is not changed when cyber-wall applies a wallpaper.
 
