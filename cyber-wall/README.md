@@ -65,6 +65,7 @@ Edit `~/.config/cyber-wall/config.json`. The installer never overwrites it.
   "directories": ["~/Pictures/Wallpapers", "~/Videos/Wallpapers"],
   "output": "auto",
   "default_wallpaper": null,
+  "theme": "synthwave",
   "mpvpaper_options": [
     "no-audio", "--quiet", "--msg-level=all=warn", "--loop-file=inf",
     "--image-display-duration=inf", "--keep-open=yes", "--hwdec=auto"
@@ -78,6 +79,12 @@ Edit `~/.config/cyber-wall/config.json`. The installer never overwrites it.
 monitor name such as `"DP-1"`. `WALLPAPER_OUTPUT` overrides the config for one
 invocation. `cyber-wall` never reads or edits your Hyprlock configuration. Choose
 or update your lock-screen wallpaper separately in your Hyprlock setup.
+
+The current visual template is synthwave, the default theme. Its stylesheet
+lives at src/cyber_wall/themes/synthwave.css, separate from picker behavior so
+additional lowercase-named templates can be added later without changing the
+picker behavior. There is no theme selector yet; synthwave is the only available
+theme for now.
 
 The picker supports arrow keys and Ctrl+J/Ctrl+K for navigation, Enter to
 apply, and Escape to close. It remembers the last selection in
@@ -119,7 +126,7 @@ hl.window_rule({
 
 The class match is the picker's GTK application ID, `org.cyber-ware.cyber-wall`.
 It must match the app ID exactly; a rule for the older
-`com.waterkhair.wallpaper-picker` application will not match CyberWall, so the
+`com.waterkhair.wallpaper-picker` application will not match `cyber-wall`, so the
 window will use the normal tiling behavior. Adjust `size` to suit your display.
 If you prefer a borderless window, you can add `border_size = 0` to the rule.
 
@@ -166,9 +173,11 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m compileall -q src tests
 ```
 
-The current picker on the author's machine is not modified by this source
-project or its installer. Test `cyber-wall` independently, then add or replace
-your own key bindings when you are ready.
+On the maintainer's current CachyOS/Hyprland setup, the existing
+Ctrl+Super+Alt+W binding launches `cyber-wall-toggle`, and startup restore uses
+`cyber-wall-set --restore`. This personal compositor configuration is not
+installed or modified by the component scripts. Hyprlock's background is
+configured separately and is not changed when cyber-wall applies a wallpaper.
 
 See [../docs/git-setup.md](../docs/git-setup.md) for the repository workflow and
 the local GitHub credential-storage setup used for this project.

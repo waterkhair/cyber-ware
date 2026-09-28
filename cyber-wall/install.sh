@@ -42,7 +42,7 @@ if [ ! -f "$project_dir/src/cyber_wall/picker.py" ]; then
         printf '%s\n' 'tar is required to unpack cyber-wall.' >&2
         exit 1
     }
-    download_dir=$(mktemp -d "${TMPDIR:-/tmp}/cyberwall-install.XXXXXX")
+    download_dir=$(mktemp -d "${TMPDIR:-/tmp}/cyber-wall-install.XXXXXX")
     trap 'rm -rf "$download_dir"' EXIT
     if ! curl -fsSL 'https://github.com/WaterKhair/cyber-ware/archive/refs/heads/main.tar.gz' \
         | tar -xz --strip-components=1 -C "$download_dir"; then

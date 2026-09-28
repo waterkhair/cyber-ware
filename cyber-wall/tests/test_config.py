@@ -16,6 +16,7 @@ class ConfigTests(unittest.TestCase):
             config = load_config()
         self.assertEqual(config["directories"], DEFAULTS["directories"])
         self.assertEqual(config["output"], "auto")
+        self.assertEqual(config["theme"], "synthwave")
 
     def test_user_values_override_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -33,6 +34,14 @@ class ConfigTests(unittest.TestCase):
             path.write_text('{"directories": "not-an-array"}')
             with patch.dict(os.environ, {"CYBER_WALL_CONFIG": str(path)}):
                 with self.assertRaisesRegex(ValueError, "directories"):
+                    load_config()
+
+    def test_rejects_unknown_theme(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text('{"theme": "not-a-template"}')
+            with patch.dict(os.environ, {"CYBER_WALL_CONFIG": str(path)}):
+                with self.assertRaisesRegex(ValueError, "theme"):
                     load_config()
 
     def test_config_override_path(self) -> None:

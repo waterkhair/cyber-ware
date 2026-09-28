@@ -8,10 +8,14 @@ from pathlib import Path
 from typing import Any
 
 
+AVAILABLE_THEMES = ("synthwave",)
+
+
 DEFAULTS: dict[str, Any] = {
     "directories": ["~/Pictures/Wallpapers", "~/Videos/Wallpapers"],
     "output": "auto",
     "default_wallpaper": None,
+    "theme": "synthwave",
     "mpvpaper_options": [
         "no-audio",
         "--quiet",
@@ -78,4 +82,8 @@ def load_config() -> dict[str, Any]:
         isinstance(item, str) for item in result["mpvpaper_options"]
     ):
         raise ValueError("config 'mpvpaper_options' must be an array of strings")
+    theme = result.get("theme")
+    if not isinstance(theme, str) or theme not in AVAILABLE_THEMES:
+        themes = ", ".join(AVAILABLE_THEMES)
+        raise ValueError(f"config 'theme' must be one of: {themes}")
     return result

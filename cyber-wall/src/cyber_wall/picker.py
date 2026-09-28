@@ -24,96 +24,12 @@ CONFIG = load_config()
 WALLPAPER_DIRS = tuple(expand_path(path) for path in CONFIG["directories"])
 STATE_DIR = cache_dir()
 THUMBNAIL_DIR = STATE_DIR / "thumbnails"
+THEME_CSS = Path(__file__).with_name("themes") / f"{CONFIG['theme']}.css"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 APP_HOME = Path(os.environ.get("CYBER_WALL_HOME", PROJECT_ROOT))
 SETTER = shutil.which("cyber-wall-set") or str(APP_HOME / "bin" / "cyber-wall-set")
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".mov", ".avi"}
-
-CSS = """
-window {
-    background: transparent;
-}
-
-#shell {
-    background: #0b0f14;
-    border: none;
-    border-radius: 16px;
-    padding: 18px;
-}
-
-#title {
-    color: #ff3cac;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-#subtitle, #hint {
-    color: #7f8ca3;
-}
-
-#preview-frame {
-    background: #131b26;
-    border: 2px solid #8b5cf6;
-    border-radius: 11px;
-    padding: 8px;
-}
-
-#preview {
-    background: #070a0e;
-    border-radius: 7px;
-}
-
-#media-badge {
-    background: #ff3cac;
-    color: #0b0f14;
-    border-radius: 6px;
-    padding: 3px 8px;
-    margin: 10px;
-    font-weight: bold;
-}
-
-#media-badge.image-badge {
-    background: #00e5ff;
-}
-
-entry {
-    background: #131b26;
-    color: #d7e3f4;
-    border: 1px solid #00e5ff;
-    border-radius: 8px;
-    padding: 7px 10px;
-}
-
-list {
-    background: #0b0f14;
-}
-
-row {
-    color: #d7e3f4;
-    border-radius: 7px;
-    padding: 7px 10px;
-}
-
-row:hover {
-    background: #1b2d3a;
-}
-
-row:selected {
-    background: #8b5cf6;
-    color: #ffffff;
-}
-
-.badge {
-    color: #00e5ff;
-    min-width: 58px;
-    font-weight: bold;
-}
-
-.badge-video {
-    color: #ff3cac;
-}
-"""
 
 
 def discover_wallpapers() -> list[dict[str, object]]:
@@ -174,7 +90,7 @@ class WallpaperPicker(Gtk.Application):
         if display is None:
             return
         provider = Gtk.CssProvider()
-        provider.load_from_data(CSS.encode())
+        provider.load_from_data(THEME_CSS.read_bytes())
         Gtk.StyleContext.add_provider_for_display(
             display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
