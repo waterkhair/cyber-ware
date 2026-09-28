@@ -1,0 +1,120 @@
+* {
+  border: none;
+  border-radius: 9px;
+  font-family: "JetBrainsMono Nerd Font", "JetBrainsMono Nerd Font Mono", monospace;
+  font-size: 12px;
+  min-height: 0;
+}
+
+window#waybar {
+  background: transparent;
+  color: #d7e3f4;
+}
+
+#workspaces { margin: 0 7px; }
+
+#workspaces button,
+#window,
+#mpris,
+#network,
+#pulseaudio,
+#clock,
+#tray {
+  padding: 0 13px;
+  margin: 5px 4px;
+  background: rgba(19, 27, 38, 0.94);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+}
+
+#workspaces button {
+  color: #b9a7e8;
+  background: rgba(19, 27, 38, 0.94);
+  border-color: rgba(139, 92, 246, 0.22);
+  padding: 0 10px;
+  margin: 5px 2px;
+}
+
+#workspaces button:hover,
+#mpris:hover,
+#network:hover,
+#pulseaudio:hover,
+#clock:hover,
+#tray:hover {
+  color: #d7e3f4;
+  background: rgba(53, 37, 78, 0.98);
+  border-color: rgba(167, 139, 250, 0.72);
+}
+
+#workspaces button.active {
+  color: #0b0f14;
+  background: #8b5cf6;
+  border-color: #a78bfa;
+}
+
+#workspaces button.active:hover {
+  color: #0b0f14;
+  background: #a78bfa;
+  border-color: #c4b5fd;
+}
+
+#workspaces button.urgent {
+  color: #fff;
+  background: #ff3cac;
+  border-color: #ff3cac;
+}
+
+#window {
+  color: #d7e3f4;
+  border-color: rgba(139, 92, 246, 0.62);
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+#mpris {
+  font-family: "JetBrainsMono Nerd Font Propo", "JetBrainsMono Nerd Font";
+  font-size: 11px;
+  color: #c4b5fd;
+  background: rgba(32, 24, 52, 0.94);
+  border-color: rgba(139, 92, 246, 0.48);
+}
+
+#pulseaudio.muted {
+  color: #ffb86b;
+  border-color: rgba(255, 184, 107, 0.55);
+}
+
+#network.wifi { color: #c4b5fd; border-color: rgba(139, 92, 246, 0.62); }
+#network.ethernet { color: #00e5ff; border-color: rgba(0, 229, 255, 0.62); }
+#network.disconnected { color: #ffb86b; border-color: rgba(255, 184, 107, 0.62); }
+
+#pulseaudio,
+#clock {
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.62);
+}
+
+#network { min-width: 20px; padding-left: 7px; padding-right: 13px; }
+#mpris.paused { color: #ffb86b; border-color: rgba(255, 184, 107, 0.55); }
+#mpris.playing { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.72); }
+
+#pulseaudio.muted:hover {
+  color: #ffd08a;
+  background: rgba(255, 184, 107, 0.10);
+  border-color: #ffb86b;
+}
+
+#tray { padding-left: 10px; padding-right: 10px; }
+#tray > .passive { -gtk-icon-effect: dim; }
+#tray > .needs-attention {
+  -gtk-icon-effect: highlight;
+  background: rgba(255, 60, 172, 0.14);
+}
+
+tooltip {
+  background: rgba(11, 15, 20, 0.98);
+  color: #d7e3f4;
+  border: 1px solid rgba(0, 229, 255, 0.78);
+  border-radius: 8px;
+}
+
+tooltip label { padding: 7px 9px; }

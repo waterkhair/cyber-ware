@@ -12,6 +12,8 @@ components they want.
   Hyprland, using `mpvpaper`.
 - [`cyber-signal/`](cyber-signal/README.md) — user-scoped system status
   notifications with Mako themes and optional systemd user timers.
+- [`cyber-panel/`](cyber-panel/README.md) — a themed Waybar setup for Hyprland,
+  with synthwave and greenline styles.
 
 Hyprland setup files and documentation can be added at the repository root or
 in a dedicated directory as they are prepared for sharing. Keep personal
@@ -29,6 +31,11 @@ Each component documents its own install and uninstall steps. For example,
 
 Once this repository is public and has a commit on `main`, its README also
 documents the convenient one-command installer for that component.
+
+For Waybar, `cyber-panel` replaces the default user config and stylesheet after
+preserving the existing copies, then provides `synthwave` and `greenline`
+themes. Its standalone install, dependency, and recovery details are in the
+[`cyber-panel` README](cyber-panel/README.md).
 
 ## Repository setup
 

@@ -1,0 +1,58 @@
+[
+  {
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+    "spacing": 6,
+    "modules-left": ["ext/workspaces"],
+    "modules-center": ["hyprland/window"],
+    "modules-right": ["mpris", "tray", "network", "pulseaudio", "clock"],
+    "ext/workspaces": {
+      "format": "{name}",
+      "on-click": "activate",
+      "disable-scroll": true,
+      "all-outputs": true,
+      "sort-by-id": true
+    },
+    "hyprland/window": {
+      "max-length": 72,
+      "separate-outputs": true
+    },
+    "mpris": {
+      "format-playing": " {dynamic}",
+      "format-paused": " {dynamic}",
+      "format-stopped": "",
+      "dynamic-order": ["artist", "title"],
+      "max-length": 42,
+      "tooltip-format": "{player}\n{artist} — {title}",
+      "on-click": "playerctl play-pause",
+      "on-click-right": "playerctl previous",
+      "on-scroll-up": "playerctl next",
+      "on-scroll-down": "playerctl previous"
+    },
+    "pulseaudio": {
+      "format": "   {volume}%",
+      "format-muted": " muted",
+      "on-click": "wiremix-popup",
+      "on-scroll-up": "true",
+      "on-scroll-down": "true"
+    },
+    "network": {
+      "format-wifi": "",
+      "format-ethernet": "󰈀",
+      "format-disconnected": "󰈃",
+      "on-click": "impala-popup",
+      "tooltip-format-wifi": "{essid} • {signalStrength}%\n{ifname} • {ipaddr}",
+      "tooltip-format-ethernet": "{ifname} • {ipaddr}",
+      "tooltip-format-disconnected": "Offline",
+      "interval": 5
+    },
+    "clock": {
+      "format": " {:%a %b %d  %H:%M}",
+      "tooltip-format": "{:%Y-%m-%d}"
+    },
+    "tray": {
+      "spacing": 8
+    }
+  }
+]

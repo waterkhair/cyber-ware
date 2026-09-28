@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_dir=$script_dir
+
+if [ ! -f "$project_dir/src/cyber_panel/installer.py" ]; then
+    command -v curl >/dev/null 2>&1 || { printf '%s\n' 'curl is required to download cyber-panel.' >&2; exit 1; }
+    command -v tar >/dev/null 2>&1 || { printf '%s\n' 'tar is required to unpack cyber-panel.' >&2; exit 1; }
+    download_dir=$(mktemp -d "${TMPDIR:-/tmp}/cyber-panel-install.XXXXXX")
+    trap 'rm -rf "$download_dir"' EXIT
+    if ! curl -fsSL 'https://github.com/WaterKhair/cyber-ware/archive/refs/heads/main.tar.gz' \
+        | tar -xz --strip-components=1 -C "$download_dir"; then
+        printf '%s\n' 'Could not download cyber-panel. Check that the public cyber-ware repository has a main branch.' >&2
+        exit 1
+    fi
+    project_dir="$download_dir/cyber-panel"
+fi
+
+if [ ! -f "$project_dir/src/cyber_panel/installer.py" ]; then
+    printf '%s\n' 'The cyber-panel component was not found in the cyber-ware archive.' >&2
+    exit 1
+fi
+
+PYTHONPATH="$project_dir/src${PYTHONPATH+:$PYTHONPATH}" python3 "$project_dir/src/cyber_panel/installer.py"
+
+# Reload only when the installer is running in the active graphical session.
+if command -v waybar >/dev/null 2>&1 && pgrep -x waybar >/dev/null 2>&1; then
+    kill -USR2 "$(pgrep -x waybar | head -n 1)" 2>/dev/null || true
+fi

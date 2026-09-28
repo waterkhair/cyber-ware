@@ -1,0 +1,75 @@
+* {
+  border: none;
+  border-radius: 8px;
+  font-family: "JetBrainsMono Nerd Font", "JetBrainsMono Nerd Font Mono", monospace;
+  font-size: 12px;
+  min-height: 0;
+}
+
+window#waybar { background: transparent; color: #b9f6c8; }
+#workspaces { margin: 0 7px; }
+
+#workspaces button,
+#window,
+#mpris,
+#network,
+#pulseaudio,
+#clock,
+#tray {
+  color: #b9f6c8;
+  padding: 0 13px;
+  margin: 5px 4px;
+  background: rgba(7, 16, 11, 0.96);
+  border: 1px solid rgba(91, 214, 125, 0.30);
+}
+
+#workspaces button {
+  color: #87c995;
+  padding: 0 10px;
+  margin: 5px 2px;
+  border-color: rgba(91, 214, 125, 0.24);
+}
+
+#workspaces button:hover,
+#mpris:hover,
+#network:hover,
+#pulseaudio:hover,
+#clock:hover,
+#tray:hover {
+  color: #d5ffe0;
+  background: rgba(17, 42, 26, 0.98);
+  border-color: rgba(139, 245, 164, 0.70);
+}
+
+#workspaces button.active {
+  color: #07100b;
+  background: #8df0a6;
+  border-color: #b9f6c8;
+}
+
+#workspaces button.active:hover { background: #b9f6c8; }
+#workspaces button.urgent { color: #07100b; background: #f1c66d; border-color: #f1c66d; }
+#window { padding-left: 16px; padding-right: 16px; border-color: rgba(91, 214, 125, 0.55); }
+#mpris { font-size: 11px; color: #a9e9b7; }
+#mpris.playing { color: #d5ffe0; border-color: rgba(141, 240, 166, 0.72); }
+#mpris.paused,
+#pulseaudio.muted,
+#network.disconnected { color: #f1c66d; border-color: rgba(241, 198, 109, 0.62); }
+#network.wifi,
+#network.ethernet,
+#pulseaudio,
+#clock { color: #b9f6c8; border-color: rgba(91, 214, 125, 0.58); }
+#network { min-width: 20px; padding-left: 7px; padding-right: 13px; }
+#pulseaudio.muted:hover { color: #ffe4a5; background: rgba(241, 198, 109, 0.10); border-color: #f1c66d; }
+#tray { padding-left: 10px; padding-right: 10px; }
+#tray > .passive { -gtk-icon-effect: dim; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; background: rgba(241, 198, 109, 0.12); }
+
+tooltip {
+  color: #c8f8d2;
+  background: rgba(5, 12, 8, 0.98);
+  border: 1px solid rgba(91, 214, 125, 0.72);
+  border-radius: 8px;
+}
+
+tooltip label { padding: 7px 9px; }
