@@ -41,19 +41,16 @@ By default, the command is installed in `~/.local/bin`, application code in
 `~/.config/systemd/user`. Set `PREFIX` to install the command elsewhere. The
 installer does not overwrite an existing config file.
 
-The installer creates the generated theme at
-`~/.config/cyber-signal/active.mako` but intentionally does not edit Mako's
-main config. To activate it, add this line to `~/.config/mako/config`:
-
-```ini
-include=/home/YOUR_USER/.config/cyber-signal/active.mako
-```
-
-Substitute your actual home path. Then run `makoctl reload` (or restart Mako).
-Mako applies these rules only to notifications whose app name is
+The installer generates the selected theme at
+`~/.config/cyber-signal/active.mako` and, when Mako is installed, adds a
+clearly marked include block to `~/.config/mako/config` and reloads Mako if it
+is running. It preserves the rest of your Mako config. Mako applies these
+rules only to notifications whose app name is
 `cyber-signal`; other applications retain their existing appearance. The
 scoped rules use Mako's app-name criteria and normal notification style
 options. See the [Mako configuration manual](https://github.com/emersion/mako/blob/master/doc/mako.5.scd).
+If Mako is absent, the theme file is still installed but cannot be applied
+until you install Mako and add an include for `active.mako` to its config.
 
 ## Start and use
 
@@ -139,8 +136,9 @@ cyber-signal --uninstall
 
 This stops and disables the component's user units, removes those unit files,
 the one command, and application code. Configuration, generated Mako theme,
-and state are preserved. If you added the Mako `include=` line, remove it
-manually from Mako's config; cyber-signal never edits that file.
+and state are preserved. The installer-managed Mako include block is removed,
+while all other Mako settings remain. Any include you added manually outside
+that block is left untouched.
 
 To also remove cyber-signal's settings, generated theme, and saved state:
 
@@ -149,7 +147,7 @@ cyber-signal --uninstall --purge
 ```
 
 Purge requires typing `cyber-signal` to confirm. Neither uninstall mode
-changes Hyprland, Mako's main config, installed packages, or other user data.
+changes Hyprland, other Mako settings, installed packages, or other user data.
 
 ## Development
 

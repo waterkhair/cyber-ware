@@ -117,6 +117,41 @@ def _status() -> int:
     return 0
 
 
+def _remove_mako_include() -> bool:
+    """Remove only the installer-owned include block, preserving other config."""
+    path = config_home() / "mako/config"
+    try:
+        original = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return False
+    start = "# BEGIN cyber-signal managed theme"
+    end = "# END cyber-signal managed theme"
+    output: list[str] = []
+    in_block = False
+    removed = False
+    for line in original.splitlines(keepends=True):
+        marker = line.rstrip("\r\n")
+        if marker == start:
+            in_block = True
+            removed = True
+            continue
+        if in_block:
+            if marker == end:
+                in_block = False
+            continue
+        output.append(line)
+    if in_block:
+        # Incomplete markers: preserve the file instead of risking user config.
+        return False
+    if removed:
+        path.write_text("".join(output), encoding="utf-8")
+        makoctl = shutil.which("makoctl")
+        if makoctl:
+            subprocess.run([makoctl, "reload"], check=False, stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+    return removed
+
+
 def _uninstall(args: list[str]) -> int:
     if args not in ([], ["--purge"]):
         raise ValueError("usage: cyber-signal --uninstall [--purge]")
@@ -141,8 +176,12 @@ def _uninstall(args: list[str]) -> int:
         _systemctl("daemon-reload")
     executable.unlink(missing_ok=True)
     shutil.rmtree(app_dir(), ignore_errors=True)
+    removed_mako_include = _remove_mako_include()
     print("Removed cyber-signal command, application files, and user service units.")
-    print("Mako config is untouched. Remove the cyber-signal include line yourself if added.")
+    if removed_mako_include:
+        print("Removed cyber-signal's managed Mako include; all other Mako settings were preserved.")
+    else:
+        print("No managed Mako include found; Mako config was preserved.")
     if purge:
         shutil.rmtree(config_dir(), ignore_errors=True)
         shutil.rmtree(state_dir(), ignore_errors=True)

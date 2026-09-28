@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from cyber_signal.config import load_config, validate_config
 from cyber_signal.checks import disk_status, updates_result
+from cyber_signal import cli
 
 
 class ConfigTests(unittest.TestCase):
@@ -48,6 +49,21 @@ class ConfigTests(unittest.TestCase):
             result = updates_result()
         self.assertIsNotNone(result)
         self.assertEqual(result.title, "2 package updates available")
+
+    def test_uninstall_removes_only_managed_mako_block(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"XDG_CONFIG_HOME": directory}), \
+             patch.object(cli.shutil, "which", return_value=None):
+            mako_config = Path(directory) / "mako/config"
+            mako_config.parent.mkdir()
+            mako_config.write_text(
+                "background-color=#111111\n"
+                "# BEGIN cyber-signal managed theme\n"
+                "include=/tmp/cyber-signal/active.mako\n"
+                "# END cyber-signal managed theme\n"
+                "text-color=#ffffff\n"
+            )
+            self.assertTrue(cli._remove_mako_include())
+            self.assertEqual(mako_config.read_text(), "background-color=#111111\ntext-color=#ffffff\n")
 
 
 if __name__ == "__main__":
