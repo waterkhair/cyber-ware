@@ -33,7 +33,7 @@
     "pulseaudio": {
       "format": "   {volume}%",
       "format-muted": " muted",
-      "on-click": "wiremix-popup",
+      "on-click": "cyber-console wiremix",
       "on-scroll-up": "true",
       "on-scroll-down": "true"
     },
@@ -41,7 +41,7 @@
       "format-wifi": "",
       "format-ethernet": "󰈀",
       "format-disconnected": "󰈃",
-      "on-click": "impala-popup",
+      "on-click": "cyber-console impala",
       "tooltip-format-wifi": "{essid} • {signalStrength}%\n{ifname} • {ipaddr}",
       "tooltip-format-ethernet": "{ifname} • {ipaddr}",
       "tooltip-format-disconnected": "Offline",

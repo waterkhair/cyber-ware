@@ -14,6 +14,9 @@ components they want.
   notifications with Mako themes and optional systemd user timers.
 - [`cyber-panel/`](cyber-panel/README.md) — a themed Waybar setup for Hyprland,
   with synthwave and greenline styles.
+- [`cyber-console/`](cyber-console/README.md) — one command to toggle floating
+  Ghostty windows for terminal tools such as Impala, Wiremix, Bluetui, btop,
+  and Yazi.
 
 Hyprland setup files and documentation can be added at the repository root or
 in a dedicated directory as they are prepared for sharing. Keep personal
@@ -36,6 +39,11 @@ For Waybar, `cyber-panel` replaces the default user config and stylesheet after
 preserving the existing copies, then provides `synthwave` and `greenline`
 themes. Its standalone install, dependency, and recovery details are in the
 [`cyber-panel` README](cyber-panel/README.md).
+
+`cyber-console` provides a single configurable command for toggling floating
+Ghostty TUI windows. Its installer leaves compositor bindings and window rules
+to the user; integration examples are in the
+[`cyber-console` README](cyber-console/README.md).
 
 ## Repository setup
 

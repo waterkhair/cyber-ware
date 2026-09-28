@@ -22,16 +22,15 @@ Required:
 Optional, depending on the configured click actions:
 
 - `playerctl` for MPRIS play/pause/previous/next actions
-- `impala-popup` for the network pill's click action
-- `wiremix-popup` for the volume pill's click action
+- `cyber-console` (optional companion component) for the network and volume
+  pill click actions
 - A Nerd Font for the icons; otherwise replace the icon glyphs or select an
   installed font in the CSS
 
-The two `*-popup` commands are convenience helpers from some personal Hyprland
-setups, not standard programs. If you do not have them, remove or replace the
-corresponding `on-click` values in `~/.config/waybar/config.jsonc`. The missing
-commands do not prevent the bar from starting. The status modules themselves
-are supplied by Waybar.
+`cyber-console` is not a standard program. Install it from this repository or
+remove/replace the corresponding `on-click` values in
+`~/.config/waybar/config.jsonc`. Without it, the click actions do not work, but
+the bar and status modules still run normally.
 
 The installer checks the required executables before changing files, reports
 optional commands that are unavailable, and never invokes `sudo` or installs

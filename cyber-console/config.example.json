@@ -1,0 +1,30 @@
+{
+  "terminal": "ghostty",
+  "applications": {
+    "impala": {
+      "class": "org.cyber-ware.cyber-console.impala",
+      "title": "Impala",
+      "command": ["impala"]
+    },
+    "wiremix": {
+      "class": "org.cyber-ware.cyber-console.wiremix",
+      "title": "Wiremix",
+      "command": ["wiremix", "--mouse", "--theme", "default"]
+    },
+    "bluetui": {
+      "class": "org.cyber-ware.cyber-console.bluetui",
+      "title": "Bluetui",
+      "command": ["bluetui"]
+    },
+    "btop": {
+      "class": "org.cyber-ware.cyber-console.btop",
+      "title": "btop",
+      "command": ["btop"]
+    },
+    "yazi": {
+      "class": "org.cyber-ware.cyber-console.yazi",
+      "title": "Yazi",
+      "command": ["yazi"]
+    }
+  }
+}

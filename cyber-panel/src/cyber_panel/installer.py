@@ -29,7 +29,7 @@ def main() -> int:
         print("Install them with your distribution package manager; cyber-panel does not install system packages.", file=sys.stderr)
         return 1
 
-    for name, package in (("playerctl", "playerctl"), ("impala-popup", "your Impala popup helper"), ("wiremix-popup", "your Wiremix popup helper")):
+    for name, package in (("playerctl", "playerctl"), ("cyber-console", "the optional floating-tool component")):
         if shutil.which(name) is None:
             print(f"Optional command missing: {name} ({package}); its click action will not work until configured.", file=sys.stderr)
 
