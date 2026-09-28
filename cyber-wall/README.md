@@ -101,9 +101,48 @@ bind = SUPER SHIFT, W, exec, cyber-wall-toggle
 exec-once = cyber-wall-set --restore
 ```
 
-For a borderless floating picker, add a window rule for
-`org.cyber-ware.cyber-wall` using the syntax supported by your Hyprland
-version. The project does not install or edit Hyprland rules automatically.
+### Make the picker a centered floating window
+
+The installer deliberately does not edit Hyprland configuration. To make the
+picker float, add a window rule to your Hyprland config. With the Lua
+configuration API, add this alongside your other `hl.window_rule` calls:
+
+```lua
+hl.window_rule({
+    name = "cyber-wall-floating-picker",
+    match = { class = "^org\\.cyber-ware\\.cyber-wall$" },
+    float = true,
+    center = true,
+    size = { 1100, 820 },
+})
+```
+
+The class match is the picker's GTK application ID, `org.cyber-ware.cyber-wall`.
+It must match the app ID exactly; a rule for the older
+`com.waterkhair.wallpaper-picker` application will not match CyberWall, so the
+window will use the normal tiling behavior. Adjust `size` to suit your display.
+If you prefer a borderless window, you can add `border_size = 0` to the rule.
+
+For a traditional `hyprland.conf` configuration, the equivalent rule is:
+
+```ini
+windowrule {
+    name = cyber-wall-floating-picker
+    match:class = ^org\\.cyber-ware\\.cyber-wall$
+    float = true
+    center = true
+    size = 1100 820
+}
+```
+
+Reload Hyprland after saving the rule (for example, with `hyprctl reload`),
+then open the picker. If it still tiles, inspect the active window with
+`hyprctl clients` and check that its `class` is `org.cyber-ware.cyber-wall`.
+See the [Hyprland window-rules documentation](https://wiki.hypr.land/configuring/core/rules/window-rules/)
+for syntax details and options for your installed Hyprland version.
+
+This rule only controls placement. Use a separate Hyprland key binding to
+launch `cyber-wall-toggle`; the installer does not add or change shortcuts.
 
 ## Uninstall
 
