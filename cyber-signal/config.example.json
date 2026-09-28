@@ -1,0 +1,13 @@
+{
+  "theme": "synthwave",
+  "network_poll_seconds": 10,
+  "disk_warning_percent": 90,
+  "disk_critical_percent": 95,
+  "disk_mounts": ["/", "/home"],
+  "update_detail_limit": 8,
+  "checks": {
+    "network": true,
+    "updates": true,
+    "disk": true
+  }
+}

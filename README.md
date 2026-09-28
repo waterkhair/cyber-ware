@@ -10,6 +10,8 @@ components they want.
 
 - [`cyber-wall/`](cyber-wall/README.md) — GTK image/video wallpaper picker for
   Hyprland, using `mpvpaper`.
+- [`cyber-signal/`](cyber-signal/README.md) — user-scoped system status
+  notifications with Mako themes and optional systemd user timers.
 
 Hyprland setup files and documentation can be added at the repository root or
 in a dedicated directory as they are prepared for sharing. Keep personal

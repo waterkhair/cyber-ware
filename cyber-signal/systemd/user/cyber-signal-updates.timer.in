@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodically check Arch package updates with cyber-signal
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=6h
+Persistent=true
+Unit=cyber-signal-updates.service
+
+[Install]
+WantedBy=timers.target

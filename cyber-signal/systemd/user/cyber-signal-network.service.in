@@ -1,0 +1,13 @@
+[Unit]
+Description=cyber-signal network state notifications
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=@CYBER_SIGNAL_EXEC@ --watch network
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

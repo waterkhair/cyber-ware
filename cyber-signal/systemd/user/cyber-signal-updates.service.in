@@ -1,0 +1,7 @@
+[Unit]
+Description=cyber-signal Arch package update check
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=@CYBER_SIGNAL_EXEC@ --check updates

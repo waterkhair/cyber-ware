@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -d "$script_dir/../src/cyber_signal" ]; then
+    source_home=$(CDPATH= cd -- "$script_dir/.." && pwd)
+    export PYTHONPATH="$source_home/src${PYTHONPATH:+:$PYTHONPATH}"
+else
+    app_home="${CYBER_SIGNAL_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/cyber-signal}"
+    export CYBER_SIGNAL_HOME="$app_home"
+    export PYTHONPATH="$app_home/src${PYTHONPATH:+:$PYTHONPATH}"
+fi
+exec python3 -m cyber_signal.cli "$@"
