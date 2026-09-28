@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 
-AVAILABLE_THEMES = ("synthwave",)
+AVAILABLE_THEMES = ("synthwave", "greenline")
 
 
 DEFAULTS: dict[str, Any] = {

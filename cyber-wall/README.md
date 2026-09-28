@@ -80,11 +80,16 @@ monitor name such as `"DP-1"`. `WALLPAPER_OUTPUT` overrides the config for one
 invocation. `cyber-wall` never reads or edits your Hyprlock configuration. Choose
 or update your lock-screen wallpaper separately in your Hyprlock setup.
 
-The current visual template is synthwave, the default theme. Its stylesheet
-lives at src/cyber_wall/themes/synthwave.css, separate from picker behavior so
-additional lowercase-named templates can be added later without changing the
-picker behavior. There is no theme selector yet; synthwave is the only available
-theme for now.
+The default visual template is `synthwave`. The optional `greenline` theme is a
+quiet, text-first terminal look: near-black surfaces, soft gray-green text, and
+muted sage accents rather than bright phosphor green or glow effects. Both
+themes are plain GTK CSS; wallpaper thumbnails remain ordinary images. Their
+stylesheets live in `src/cyber_wall/themes/`, separate from picker behavior.
+
+To switch themes, change the `theme` value in
+`~/.config/cyber-wall/config.json` to `"greenline"` or `"synthwave"`, then
+close and reopen the picker. Existing configurations keep their current theme;
+new installations continue to default to `synthwave`.
 
 The picker supports arrow keys and Ctrl+J/Ctrl+K for navigation, Enter to
 apply, and Escape to close. It remembers the last selection in

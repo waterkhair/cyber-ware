@@ -6,7 +6,6 @@
   "output": "auto",
   "default_wallpaper": null,
   "theme": "synthwave",
-  "theme": "synthwave",
   "mpvpaper_options": [
     "no-audio",
     "--quiet",
