@@ -1,0 +1,55 @@
+/* cyber-jackout greenline palette; aligned with cyber-wall and cyber-panel. */
+* {
+  background-image: none;
+  box-shadow: none;
+}
+
+window {
+  background-color: rgba(8, 13, 9, 0.92);
+}
+
+button {
+  margin: 6px;
+  border: 1px solid rgba(101, 201, 109, 0.32);
+  border-radius: 12px;
+  color: #ccffc1;
+  background-color: rgba(16, 26, 18, 0.98);
+  background-repeat: no-repeat;
+  background-position: center 35%;
+  background-size: 28%;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 14px;
+  padding: 24px;
+}
+
+button:hover,
+button:focus,
+button:active {
+  color: #edffe8;
+  background-color: rgba(52, 120, 61, 0.45);
+  border-color: #8df0a6;
+  outline-style: solid;
+  outline-width: 2px;
+  outline-color: rgba(101, 201, 109, 0.38);
+}
+
+button#logout:hover,
+button#reboot:hover,
+button#suspend:hover,
+button#lock:hover {
+  color: #edffe8;
+  background-color: #34783d;
+  border-color: #8df0a6;
+}
+
+button#shutdown:hover {
+  color: #07100b;
+  background-color: #f1c66d;
+  border-color: #f1c66d;
+}
+
+#lock { background-image: image(url("@ICON_DIR@/lock.svg")); }
+#logout { background-image: image(url("@ICON_DIR@/logout.svg")); }
+#suspend { background-image: image(url("@ICON_DIR@/suspend.svg")); }
+#reboot { background-image: image(url("@ICON_DIR@/reboot.svg")); }
+#shutdown { background-image: image(url("@ICON_DIR@/shutdown.svg")); }

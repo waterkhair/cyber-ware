@@ -1,0 +1,55 @@
+/* cyber-jackout synthwave palette; aligned with cyber-wall and cyber-panel. */
+* {
+  background-image: none;
+  box-shadow: none;
+}
+
+window {
+  background-color: rgba(11, 15, 20, 0.88);
+}
+
+button {
+  margin: 6px;
+  border: 1px solid rgba(139, 92, 246, 0.30);
+  border-radius: 12px;
+  color: #d7e3f4;
+  background-color: rgba(19, 27, 38, 0.96);
+  background-repeat: no-repeat;
+  background-position: center 35%;
+  background-size: 28%;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 14px;
+  padding: 24px;
+}
+
+button:hover,
+button:focus,
+button:active {
+  color: #ffffff;
+  background-color: rgba(139, 92, 246, 0.18);
+  border-color: #a78bfa;
+  outline-style: solid;
+  outline-width: 2px;
+  outline-color: rgba(139, 92, 246, 0.45);
+}
+
+button#logout:hover,
+button#reboot:hover,
+button#suspend:hover,
+button#lock:hover {
+  color: #ffffff;
+  background-color: rgba(139, 92, 246, 0.22);
+  border-color: #8b5cf6;
+}
+
+button#shutdown:hover {
+  color: #0b0f14;
+  background-color: #ff3cac;
+  border-color: #ff3cac;
+}
+
+#lock { background-image: image(url("/usr/share/wlogout/icons/lock.png")); }
+#logout { background-image: image(url("/usr/share/wlogout/icons/logout.png")); }
+#suspend { background-image: image(url("/usr/share/wlogout/icons/suspend.png")); }
+#reboot { background-image: image(url("/usr/share/wlogout/icons/reboot.png")); }
+#shutdown { background-image: image(url("/usr/share/wlogout/icons/shutdown.png")); }

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Invoked under a logind shutdown-delay inhibitor by cyber-jackout.
+set -euo pipefail
+case "${1:-}" in
+    reboot|poweroff) action=$1 ;;
+    *) exit 2 ;;
+esac
+
+mapfile -t launchers < <(pgrep -u "$UID" -x start-hyprland || true)
+logger -t session-power "Shutdown worker started; launcher PIDs: ${launchers[*]:-none}."
+if ! systemctl "$action"; then
+    logger -t session-power 'Power request rejected; leaving Hyprland running.'
+    exit 1
+fi
+logger -t session-power 'Power request accepted; requesting graceful Hyprland exit.'
+if ! timeout 1s hyprctl eval 'hl.dispatch(hl.dsp.exit())'; then
+    logger -t session-power 'Exit IPC did not complete; retaining delay while checking launcher exit.'
+fi
+
+# Wait below logind's five-second delay limit; never force-kill the compositor.
+for attempt in {1..30}; do
+    running=false
+    for pid in "${launchers[@]}"; do
+        if kill -0 -- "$pid" 2>/dev/null; then running=true; fi
+    done
+    if ! "$running"; then
+        logger -t session-power 'Hyprland launcher exited; releasing shutdown delay.'
+        exit 0
+    fi
+    sleep 0.1
+done
+logger -t session-power 'Graceful-exit wait expired; releasing shutdown delay.'

@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+resolved_script=$(readlink -f -- "${BASH_SOURCE[0]}")
+app_dir=$(cd -- "$(dirname -- "$resolved_script")/.." && pwd)
+config_home=${XDG_CONFIG_HOME:-"${HOME}/.config"}
+state_home=${XDG_STATE_HOME:-"${HOME}/.local/state"}
+theme_config="$config_home/cyber-jackout/theme"
+state_dir="$state_home/cyber-jackout"
+wlogout_style="$config_home/wlogout/style.css"
+
+atomic_copy() {
+    local source=$1 destination=$2 temporary
+    mkdir -p -- "$(dirname -- "$destination")"
+    temporary=$(mktemp "${destination}.cyber-jackout.XXXXXX")
+    if ! cp -- "$source" "$temporary"; then
+        rm -f -- "$temporary"
+        return 1
+    fi
+    chmod 644 "$temporary"
+    mv -f -- "$temporary" "$destination"
+}
+
+file_hash() { sha256sum -- "$1" | cut -d ' ' -f 1; }
+current_theme() {
+    if [[ -f "$theme_config" ]]; then cat -- "$theme_config"; else printf '%s\n' synthwave; fi
+}
+
+apply_theme() {
+    local name=${1:-} theme_source icon_uri escaped_icon_uri temporary icon
+    if [[ -z "$name" ]]; then
+        printf 'Current theme: %s; available: synthwave, greenline\n' "$(current_theme)"
+        return 0
+    fi
+    case "$name" in synthwave|greenline) ;; *)
+        printf 'Unknown theme %s; choose synthwave or greenline.\n' "$name" >&2
+        return 2
+        ;;
+    esac
+    if [[ "$name" == greenline ]] && ! command -v rsvg-convert >/dev/null 2>&1; then
+        printf '%s\n' 'The greenline icon set needs librsvg (rsvg-convert); install that package before switching themes.' >&2
+        return 1
+    fi
+    [[ -f "$state_dir/installed" ]] || { printf '%s\n' 'Theme support is not installed; run the cyber-jackout installer first.' >&2; return 1; }
+    theme_source="$app_dir/themes/$name.css"
+    [[ -f "$theme_source" ]] || { printf 'Theme file is missing: %s\n' "$theme_source" >&2; return 1; }
+    mkdir -p -- "$(dirname -- "$wlogout_style")"
+    temporary=$(mktemp "${wlogout_style}.cyber-jackout.XXXXXX")
+    if [[ "$name" == greenline ]]; then
+        for icon in lock logout suspend reboot shutdown; do
+            [[ -f "$app_dir/icons/greenline/$icon.svg" ]] || {
+                rm -f -- "$temporary"
+                printf 'Greenline icon is missing: %s\n' "$app_dir/icons/greenline/$icon.svg" >&2
+                return 1
+            }
+        done
+        icon_uri="$app_dir/icons/greenline"
+        escaped_icon_uri=$(printf '%s' "$icon_uri" | sed 's/[\\&|]/\\&/g')
+        if ! sed "s|@ICON_DIR@|$escaped_icon_uri|g" "$theme_source" > "$temporary"; then
+            rm -f -- "$temporary"
+            return 1
+        fi
+    else
+        cp -- "$theme_source" "$temporary"
+    fi
+    chmod 644 "$temporary"
+    mv -f -- "$temporary" "$wlogout_style"
+    mkdir -p -- "$(dirname -- "$theme_config")"
+    printf '%s\n' "$name" > "$theme_config"
+    chmod 600 "$theme_config"
+    file_hash "$wlogout_style" > "$state_dir/style.sha256"
+    printf 'Theme set to %s. It will appear the next time wlogout opens.\n' "$name"
+}
+
+usage() {
+    cat <<'EOF'
+Usage: cyber-jackout [logout|reboot|poweroff]
+       cyber-jackout --theme [synthwave|greenline]
+       cyber-jackout --check
+       cyber-jackout --uninstall [--purge]
+
+Safely exit the current Hyprland session, reboot, or power off.
+With no argument, logout is selected.
+EOF
+}
+
+check_requirements() {
+    local missing=() command
+    for command in bash cat chmod cp cut dirname flock hyprctl logger mkdir mktemp mv notify-send pgrep readlink rm sed sha256sum sleep systemctl systemd-inhibit systemd-run timeout; do
+        command -v "$command" >/dev/null 2>&1 || missing+=("$command")
+    done
+    if ((${#missing[@]})); then
+        printf 'Missing required commands: %s\n' "${missing[*]}" >&2
+        return 1
+    fi
+    printf '%s\n' 'Required commands are available.'
+    if [[ "$(current_theme)" == greenline ]] && ! command -v rsvg-convert >/dev/null 2>&1; then
+        printf '%s\n' 'Greenline icons need librsvg (rsvg-convert), which is missing.' >&2
+        return 1
+    fi
+    if command -v cyber-wall >/dev/null 2>&1; then
+        printf '%s\n' 'Optional integration available: cyber-wall (wallpaper recovery on a rejected action).'
+    else
+        printf '%s\n' 'Optional integration missing: cyber-wall (wallpaper recovery will be unavailable if an action fails).'
+    fi
+}
+
+uninstall() {
+    local purge=${1:-0} original_present expected_hash current_hash
+    local prefix=${PREFIX:-"${HOME}/.local"}
+    local data_home=${XDG_DATA_HOME:-"${HOME}/.local/share"}
+    local command_path="$prefix/bin/cyber-jackout"
+    local installed_app_dir="$data_home/cyber-jackout"
+    local backup_style="$state_dir/backups/style.css"
+    if [[ -L "$installed_app_dir" || ! -f "$installed_app_dir/.cyber-jackout-managed" || ! -f "$state_dir/installed" ]]; then
+        printf '%s\n' 'Refusing to remove cyber-jackout files: installation marker is missing or unsafe.' >&2
+        return 1
+    fi
+    if [[ $(readlink -f -- "$command_path" 2>/dev/null || true) != "$installed_app_dir/bin/cyber-jackout" ]]; then
+        printf 'Refusing to remove an unexpected command at %s.\n' "$command_path" >&2
+        return 1
+    fi
+    if [[ ! -f "$state_dir/original-style-existed" ]]; then
+        printf '%s\n' 'Refusing to uninstall: original stylesheet recovery metadata is missing.' >&2
+        return 1
+    fi
+    original_present=$(cat "$state_dir/original-style-existed")
+    case "$original_present" in yes|no) ;; *)
+        printf '%s\n' 'Refusing to uninstall: stylesheet recovery metadata is invalid.' >&2
+        return 1
+        ;;
+    esac
+    if [[ "$original_present" == yes && ! -f "$backup_style" ]]; then
+        printf 'Refusing to uninstall: saved original stylesheet is missing (%s).\n' "$backup_style" >&2
+        return 1
+    fi
+    expected_hash=$(cat "$state_dir/style.sha256" 2>/dev/null || true)
+    if [[ -f "$wlogout_style" && -n "$expected_hash" ]]; then
+        current_hash=$(file_hash "$wlogout_style")
+        if [[ "$current_hash" != "$expected_hash" ]]; then
+            mkdir -p -- "$state_dir/before-uninstall"
+            cp -p -- "$wlogout_style" "$state_dir/before-uninstall/style.css"
+            printf 'Preserved your edited wlogout stylesheet at %s.\n' "$state_dir/before-uninstall/style.css"
+        fi
+    fi
+    if [[ "$original_present" == yes && -f "$backup_style" ]]; then
+        atomic_copy "$backup_style" "$wlogout_style"
+    elif [[ -e "$wlogout_style" ]]; then
+        rm -- "$wlogout_style"
+    fi
+    rm -- "$command_path"
+    rm -rf -- "$installed_app_dir"
+    printf 'Removed cyber-jackout from %s.\n' "$installed_app_dir"
+    printf '%s\n' 'The original wlogout stylesheet was restored when available.'
+    printf '%s\n' 'Hyprland and wlogout layout references were not changed; remove them separately if desired.'
+    if ((purge)); then
+        rm -rf -- "$config_home/cyber-jackout" "$state_dir"
+        printf '%s\n' 'cyber-jackout theme settings and recovery copies were purged.'
+    else
+        printf 'Theme settings and recovery copies remain in %s.\n' "$state_dir"
+    fi
+}
+
+args=("$@")
+if ((${#args[@]} == 0)); then
+    action=logout
+else
+    action=${args[0]}
+fi
+
+case "$action" in
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    --check)
+        ((${#args[@]} == 1)) || { usage >&2; exit 2; }
+        check_requirements
+        exit
+        ;;
+    --theme)
+        ((${#args[@]} <= 2)) || { usage >&2; exit 2; }
+        apply_theme "${args[1]:-}"
+        exit
+        ;;
+    --uninstall)
+        if ((${#args[@]} == 1)); then
+            uninstall 0
+        elif ((${#args[@]} == 2)) && [[ ${args[1]} == --purge ]]; then
+            printf '%s\n' 'This removes cyber-jackout settings and recovery copies after restoring the original wlogout stylesheet.'
+            read -r -p 'Type cyber-jackout to confirm: ' confirmation
+            [[ "$confirmation" == cyber-jackout ]] || { printf '%s\n' 'Cancelled.'; exit 1; }
+            uninstall 1
+        else
+            usage >&2
+            exit 2
+        fi
+        exit
+        ;;
+    logout|reboot|poweroff)
+        ((${#args[@]} <= 1)) || { usage >&2; exit 2; }
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
+esac
+
+check_requirements >/dev/null || exit 1
+
+# Stop Wayland clients while the compositor is still available to them.
+: "${XDG_RUNTIME_DIR:?No user runtime directory}"
+: "${HYPRLAND_INSTANCE_SIGNATURE:?Not running in a Hyprland session}"
+exec 9>"$XDG_RUNTIME_DIR/hyprland-logout.lock"
+flock -n 9 || exit 0
+hyprctl monitors -j >/dev/null
+
+fail() {
+    if [[ "${cleanup_started:-0}" == 1 ]]; then
+        if [[ "${wallpaper_was_running:-0}" == 1 && "${wallpaper_stopped:-0}" == 1 ]]; then
+            if command -v cyber-wall >/dev/null 2>&1; then
+                if ! timeout 15s cyber-wall --set --restore; then
+                    logger -t cyber-jackout 'Could not restore the wallpaper after the session action failed.'
+                fi
+            else
+                logger -t cyber-jackout 'cyber-wall is unavailable; could not restore the wallpaper after the session action failed.'
+            fi
+        fi
+        if ((${#portals_were_active[@]} > 0)); then
+            if ! systemctl --user start "${portals_were_active[@]}"; then
+                logger -t cyber-jackout 'Could not restore all previously active portal services.'
+            fi
+        fi
+    fi
+    printf '%s\n' "$1" >&2
+    notify-send --app-name='Session power menu' --urgency=normal \
+        "Session action paused: $action" "$1" || true
+    exit 1
+}
+
+# Target this user's wallpaper process only; never terminate ordinary mpv windows.
+mapfile -t wallpaper_pids < <(pgrep -u "$UID" -x mpvpaper || true)
+wallpaper_was_running=0
+wallpaper_stopped=0
+((${#wallpaper_pids[@]} == 0)) || wallpaper_was_running=1
+portals_were_active=()
+for service in \
+    xdg-desktop-portal.service \
+    xdg-desktop-portal-hyprland.service \
+    xdg-desktop-portal-gtk.service; do
+    if systemctl --user is-active --quiet "$service"; then
+        portals_were_active+=("$service")
+    fi
+done
+cleanup_started=1
+for pid in "${wallpaper_pids[@]}"; do
+    kill -TERM -- "$pid" 2>/dev/null || true
+done
+for pid in "${wallpaper_pids[@]}"; do
+    for attempt in {1..50}; do
+        kill -0 -- "$pid" 2>/dev/null || break
+        sleep 0.1
+    done
+    if kill -0 -- "$pid" 2>/dev/null; then
+        fail 'The wallpaper did not exit within five seconds. The desktop has been left running.'
+    fi
+done
+wallpaper_stopped=1
+
+# Explicit stop suppresses Restart=on-failure during compositor teardown.
+# Stop the frontend too so it cannot request backend reactivation mid-logout.
+if ! timeout 15s systemctl --user stop \
+    xdg-desktop-portal.service \
+    xdg-desktop-portal-hyprland.service \
+    xdg-desktop-portal-gtk.service; then
+    fail 'Desktop portals did not stop cleanly. The desktop has been left running.'
+fi
+
+case "$action" in
+    logout)
+        hyprctl eval 'hl.dispatch(hl.dsp.exit())' \
+            || fail 'Hyprland did not accept the logout request; the desktop has been left running.'
+        ;;
+    reboot|poweroff)
+        systemd-run --user --quiet --wait --collect \
+            --unit=hyprland-session-power \
+            --service-type=exec \
+            --setenv=HYPRLAND_INSTANCE_SIGNATURE \
+            --setenv=XDG_RUNTIME_DIR \
+            "$app_dir/libexec/cyber-jackout-power-finish" "$action" \
+            || fail "The $action sequence failed; check the session-power journal."
+        ;;
+esac

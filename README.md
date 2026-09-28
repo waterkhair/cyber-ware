@@ -17,6 +17,9 @@ components they want.
 - [`cyber-console/`](cyber-console/README.md) — one command to toggle floating
   Ghostty windows for terminal tools such as Impala, Wiremix, Bluetui, btop,
   and Yazi.
+- [`cyber-jackout/`](cyber-jackout/README.md) — clean Hyprland logout, reboot,
+  and shutdown with wallpaper/portal cleanup and matching synthwave/greenline
+  wlogout themes.
 
 Hyprland setup files and documentation can be added at the repository root or
 in a dedicated directory as they are prepared for sharing. Keep personal
