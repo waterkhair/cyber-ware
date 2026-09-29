@@ -20,13 +20,36 @@ components they want.
 - [`cyber-jackout/`](cyber-jackout/README.md) — clean Hyprland logout, reboot,
   and shutdown with wallpaper/portal cleanup and matching synthwave/greenline
   wlogout themes.
+- [`cyber-scan/`](cyber-scan/README.md) — Wayland region screenshots through
+  grim, slurp, and swappy.
+- [`hyprland/`](hyprland/README.md) — modular Lua configuration and setup
+  guidance for integrating the cyber-ware components.
 
-Hyprland setup files and documentation can be added at the repository root or
-in a dedicated directory as they are prepared for sharing. Keep personal
-secrets, machine-specific state, and unreviewed configuration out of the
-public repository.
+Keep personal secrets, machine-specific state, and unreviewed configuration
+out of the public repository. Hardware-specific settings belong in a local
+`hyprland.local.lua` file rather than the shared modules.
 
-## Installing a component
+## Install the cyber-ware setup
+
+The top-level installer always installs the modular Hyprland configuration,
+then asks whether to install each optional cyber-ware component. It does not
+use sudo or install operating-system packages; each component installer checks
+its own dependencies.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/WaterKhair/cyber-ware/main/install.sh | sh
+```
+
+To review the repository first, clone it and run `./install.sh`. Use
+`./install.sh --no-components` to install only the Hyprland config, or
+`./install.sh --all` to install every component without prompts. The config
+installer preserves an existing entry point and module folder under
+`$XDG_STATE_HOME/cyber-ware/backups/`; it leaves an existing
+`hyprland.local.lua` untouched and migrates old `environment.lua`/`monitors.lua`
+modules into it when possible.
+Details and machine-specific setup are in [`hyprland/README.md`](hyprland/README.md).
+
+## Installing one component
 
 Each component documents its own install and uninstall steps. For example,
 `cyber-wall` can be installed by running its script from this repository:
@@ -35,8 +58,8 @@ Each component documents its own install and uninstall steps. For example,
 ./cyber-wall/install.sh
 ```
 
-Once this repository is public and has a commit on `main`, its README also
-documents the convenient one-command installer for that component.
+Each component README also documents a convenient one-command installer for
+that component when you want to install it separately.
 
 For Waybar, `cyber-panel` replaces the default user config and stylesheet after
 preserving the existing copies, then provides `synthwave` and `greenline`

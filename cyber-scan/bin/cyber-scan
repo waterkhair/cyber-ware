@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+resolved_script=$(readlink -f -- "${BASH_SOURCE[0]}")
+app_dir=$(cd -- "$(dirname -- "$resolved_script")/.." && pwd)
+
+usage() {
+    cat <<'EOF'
+Usage: cyber-scan
+       cyber-scan --check
+       cyber-scan --help
+       cyber-scan --uninstall
+
+Select a screen region with slurp, capture it with grim, then open it in swappy.
+EOF
+}
+
+check_requirements() {
+    local missing=() command
+    for command in bash grim mkdir readlink rm slurp swappy; do
+        command -v "$command" >/dev/null 2>&1 || missing+=("$command")
+    done
+    if ((${#missing[@]})); then
+        printf 'Missing required commands: %s\n' "${missing[*]}" >&2
+        printf '%s\n' 'Install grim, slurp, and swappy with your distribution package manager.' >&2
+        return 1
+    fi
+    printf '%s\n' 'Required commands are available: grim, slurp, and swappy.'
+    if [[ -z ${WAYLAND_DISPLAY:-} || -z ${XDG_RUNTIME_DIR:-} ]]; then
+        printf '%s\n' 'No active Wayland session environment detected; run captures from Hyprland.' >&2
+        return 1
+    fi
+}
+
+uninstall() {
+    local prefix=${PREFIX:-"${HOME}/.local"}
+    local data_home=${XDG_DATA_HOME:-"${HOME}/.local/share"}
+    local command_path="$prefix/bin/cyber-scan"
+    local installed_app_dir="$data_home/cyber-scan"
+    if [[ -L "$installed_app_dir" || ! -f "$installed_app_dir/.cyber-scan-managed" ]]; then
+        printf '%s\n' 'Refusing to remove cyber-scan files: installation marker is missing or unsafe.' >&2
+        return 1
+    fi
+    if [[ $(readlink -f -- "$command_path" 2>/dev/null || true) != "$installed_app_dir/bin/cyber-scan" ]]; then
+        printf 'Refusing to remove an unexpected command at %s.\n' "$command_path" >&2
+        return 1
+    fi
+    rm -- "$command_path"
+    rm -rf -- "$installed_app_dir"
+    printf 'Removed cyber-scan from %s.\n' "$installed_app_dir"
+    printf '%s\n' 'Hyprland and Swappy configuration were not changed.'
+}
+
+case "${1:-}" in
+    --help|-h)
+        (($# <= 1)) || { usage >&2; exit 2; }
+        usage
+        exit 0
+        ;;
+    --check)
+        (($# == 1)) || { usage >&2; exit 2; }
+        check_requirements
+        exit
+        ;;
+    --uninstall)
+        (($# == 1)) || { usage >&2; exit 2; }
+        uninstall
+        exit
+        ;;
+    "")
+        (($# == 0)) || { usage >&2; exit 2; }
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
+esac
+
+check_requirements >/dev/null
+if ! geometry=$(slurp); then
+    exit 0
+fi
+[[ -n "$geometry" ]] || exit 0
+mkdir -p -- "$HOME/Pictures/Screenshots"
+grim -g "$geometry" - | swappy -f -
