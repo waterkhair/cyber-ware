@@ -66,6 +66,18 @@ borders. The command also updates installed `cyber-wall`, `cyber-signal`,
 are skipped; components installed later inherit the saved theme. `synthwave`
 is the default when no shared selection exists.
 
+To remove only the umbrella Hyprland config and `cyber-ware` command:
+
+```sh
+cyber-ware --uninstall
+```
+
+Uninstall requires typing `cyber-ware` to confirm. It restores the original
+Hyprland entry point and module directory, preserves a recovery copy of the
+current files, and leaves optional components, the shared theme preference,
+and backups in place. Remove optional components separately with their own
+`--uninstall` commands.
+
 ## Installing one component
 
 Each component documents its own install and uninstall steps. For example,

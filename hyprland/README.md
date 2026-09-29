@@ -21,6 +21,10 @@ the same selection to installed theme-aware cyber-ware components. The shared
 selection is stored as plain text at `~/.config/cyber-ware/theme` (or under
 `$XDG_CONFIG_HOME`).
 
+`cyber-ware --uninstall` restores the Hyprland files saved before installation
+and removes the shared command. It does not uninstall standalone components;
+use each component's own uninstall command for that.
+
 The config is an opinionated integration profile, not a minimal Hyprland install.
 It expects the relevant programs and cyber-ware components to be installed.
 Install each optional component from its own directory and follow its README.

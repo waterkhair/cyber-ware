@@ -61,6 +61,7 @@ prefix=${PREFIX:-"$HOME/.local"}
 command_dir=$prefix/bin
 command_path=$command_dir/cyber-ware
 theme_file=$config_home/cyber-ware/theme
+install_state=$state_home/cyber-ware/install.state
 hypr_dir=$config_home/hypr
 module_dir=$hypr_dir/hyprland
 main_config=$hypr_dir/hyprland.lua
@@ -79,6 +80,13 @@ fi
 if [ -f "$theme_file" ]; then
     selected_theme=$(sed -n '1p' "$theme_file")
     case "$selected_theme" in synthwave|greenline) ;; *) printf 'Invalid shared theme in %s\n' "$theme_file" >&2; exit 1 ;; esac
+fi
+initial_backup_name=
+created_local_config=no
+if [ -f "$install_state" ] && [ "$(sed -n '1p' "$install_state")" = 'version=1' ]; then
+    initial_backup_name=$(sed -n 's/^backup_name=//p' "$install_state")
+    created_local_config=$(sed -n 's/^created_local_config=//p' "$install_state")
+    case "$created_local_config" in yes|no) ;; *) printf '%s\n' 'Invalid existing cyber-ware installation state.' >&2; exit 1 ;; esac
 fi
 if [ -L "$main_config" ] || [ -L "$module_dir" ]; then
     printf '%s\n' 'Refusing to replace a symlinked Hyprland config target.' >&2
@@ -108,6 +116,9 @@ if [ -e "$main_config" ] || [ -e "$module_dir" ]; then
     [ ! -e "$main_config" ] || cp -a -- "$main_config" "$backup_dir/"
     [ ! -e "$module_dir" ] || cp -a -- "$module_dir" "$backup_dir/"
 fi
+if [ -z "$initial_backup_name" ] && [ -n "$backup_dir" ]; then
+    initial_backup_name=${backup_dir##*/}
+fi
 
 local_config=$hypr_dir/hyprland.local.lua
 migrate_env=no
@@ -131,6 +142,7 @@ done
 if [ "$migrate_env" = yes ] || [ "$migrate_monitor" = yes ]; then
     local_config_tmp=$(mktemp "$hypr_dir/.hyprland.local.lua.XXXXXX")
     {
+        printf '%s\n' '-- cyber-ware-migrated-local-config'
         printf '%s\n' '-- Migrated by cyber-ware from your previous modular Hyprland config.'
         [ "$migrate_env" != yes ] || printf '%s\n' 'require("hyprland.environment")'
         [ "$migrate_monitor" != yes ] || printf '%s\n' 'require("hyprland.monitors")'
@@ -138,8 +150,18 @@ if [ "$migrate_env" = yes ] || [ "$migrate_monitor" = yes ]; then
     chmod 644 "$local_config_tmp"
     mv -- "$local_config_tmp" "$local_config"
     local_config_tmp=
+    created_local_config=yes
     printf '%s\n' 'Preserved existing environment/monitor modules through hyprland.local.lua.'
 fi
+mkdir -p "$state_home/cyber-ware"
+install_state_tmp=$(mktemp "$state_home/cyber-ware/.install.state.XXXXXX")
+{
+    printf '%s\n' 'version=1'
+    printf 'backup_name=%s\n' "$initial_backup_name"
+    printf 'created_local_config=%s\n' "$created_local_config"
+} > "$install_state_tmp"
+chmod 600 "$install_state_tmp"
+mv -- "$install_state_tmp" "$install_state"
 printf 'Installed the cyber-ware Hyprland config in %s\n' "$hypr_dir"
 printf 'Installed cyber-ware theme command in %s\n' "$command_path"
 if [ -n "$backup_dir" ]; then
