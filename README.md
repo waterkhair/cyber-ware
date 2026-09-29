@@ -48,6 +48,23 @@ installer preserves an existing entry point and module folder under
 `hyprland.local.lua` untouched and migrates old `environment.lua`/`monitors.lua`
 modules into it when possible.
 Details and machine-specific setup are in [`hyprland/README.md`](hyprland/README.md).
+The shared command is installed to `~/.local/bin/cyber-ware` by default; ensure
+`~/.local/bin` is on `PATH`.
+
+The installer also provides one shared theme command:
+
+```sh
+cyber-ware --theme                 # show the selected theme
+cyber-ware --theme greenline       # switch the desktop to greenline
+cyber-ware --theme synthwave       # switch the desktop to synthwave
+```
+
+The shared theme is saved in `~/.config/cyber-ware/theme` (or under
+`$XDG_CONFIG_HOME`). Hyprland reads it for active/inactive window and group
+borders. The command also updates installed `cyber-wall`, `cyber-signal`,
+`cyber-panel`, and `cyber-jackout`, then reloads Hyprland. Missing components
+are skipped; components installed later inherit the saved theme. `synthwave`
+is the default when no shared selection exists.
 
 ## Installing one component
 

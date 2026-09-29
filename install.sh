@@ -45,7 +45,7 @@ if [ ! -f "$source_dir/hyprland/hyprland.lua" ] || [ ! -d "$source_dir/cyber-wal
 fi
 
 for file in hyprland/hyprland.lua hyprland/appearance.lua hyprland/windows.lua \
-    hyprland/autostart.lua hyprland/keybindings.lua; do
+    hyprland/autostart.lua hyprland/keybindings.lua bin/cyber-ware; do
     [ -f "$source_dir/$file" ] || { printf 'Required config file is missing: %s\n' "$file" >&2; exit 1; }
 done
 for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan; do
@@ -57,11 +57,29 @@ done
 
 config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 state_home=${XDG_STATE_HOME:-"$HOME/.local/state"}
+prefix=${PREFIX:-"$HOME/.local"}
+command_dir=$prefix/bin
+command_path=$command_dir/cyber-ware
+theme_file=$config_home/cyber-ware/theme
 hypr_dir=$config_home/hypr
 module_dir=$hypr_dir/hyprland
 main_config=$hypr_dir/hyprland.lua
 case "$config_home" in /|"") printf '%s\n' 'Refusing an unsafe configuration directory.' >&2; exit 1 ;; esac
 case "$state_home" in /|"") printf '%s\n' 'Refusing an unsafe state directory.' >&2; exit 1 ;; esac
+case "$prefix" in /|"") printf '%s\n' 'Refusing an unsafe command prefix.' >&2; exit 1 ;; esac
+command -v sed >/dev/null 2>&1 || { printf '%s\n' 'Required installer command missing: sed' >&2; exit 1; }
+if [ -L "$command_path" ] || { [ -e "$command_path" ] && { [ ! -f "$command_path" ] || [ "$(sed -n '2p' "$command_path")" != '# cyber-ware-managed-cli' ]; }; }; then
+    printf 'Refusing to replace an unrelated command: %s\n' "$command_path" >&2
+    exit 1
+fi
+if [ -L "$theme_file" ] || { [ -e "$theme_file" ] && [ ! -f "$theme_file" ]; }; then
+    printf 'Refusing to replace an unsafe theme file: %s\n' "$theme_file" >&2
+    exit 1
+fi
+if [ -f "$theme_file" ]; then
+    selected_theme=$(sed -n '1p' "$theme_file")
+    case "$selected_theme" in synthwave|greenline) ;; *) printf 'Invalid shared theme in %s\n' "$theme_file" >&2; exit 1 ;; esac
+fi
 if [ -L "$main_config" ] || [ -L "$module_dir" ]; then
     printf '%s\n' 'Refusing to replace a symlinked Hyprland config target.' >&2
     exit 1
@@ -78,7 +96,7 @@ for file in appearance.lua windows.lua autostart.lua keybindings.lua; do
     fi
 done
 
-for command in chmod cp date mkdir mktemp mv rm; do
+for command in chmod cp date dirname install mkdir mktemp mv rm sed; do
     command -v "$command" >/dev/null 2>&1 || { printf 'Required installer command missing: %s\n' "$command" >&2; exit 1; }
 done
 
@@ -100,6 +118,12 @@ if [ ! -e "$local_config" ] && [ ! -L "$local_config" ]; then
 fi
 
 mkdir -p "$module_dir"
+mkdir -p "$command_dir" "$(dirname -- "$theme_file")"
+install -m 755 "$source_dir/bin/cyber-ware" "$command_path"
+if [ ! -e "$theme_file" ]; then
+    printf '%s\n' synthwave > "$theme_file"
+    chmod 600 "$theme_file"
+fi
 cp -- "$source_dir/hyprland/hyprland.lua" "$main_config"
 for file in appearance.lua windows.lua autostart.lua keybindings.lua; do
     cp -- "$source_dir/hyprland/$file" "$module_dir/$file"
@@ -117,6 +141,7 @@ if [ "$migrate_env" = yes ] || [ "$migrate_monitor" = yes ]; then
     printf '%s\n' 'Preserved existing environment/monitor modules through hyprland.local.lua.'
 fi
 printf 'Installed the cyber-ware Hyprland config in %s\n' "$hypr_dir"
+printf 'Installed cyber-ware theme command in %s\n' "$command_path"
 if [ -n "$backup_dir" ]; then
     printf 'Previous config files backed up to %s\n' "$backup_dir"
 else

@@ -78,6 +78,14 @@ theme=${CYBER_JACKOUT_THEME:-}
 if [ -z "$theme" ] && [ -f "$theme_config" ]; then
     theme=$(sed -n '1p' "$theme_config")
 fi
+shared_theme_file=$config_home/cyber-ware/theme
+if [ -z "${CYBER_JACKOUT_THEME:-}" ] && [ -f "$shared_theme_file" ]; then
+    shared_theme=$(sed -n '1p' "$shared_theme_file")
+    case "$shared_theme" in
+        synthwave|greenline) theme=$shared_theme ;;
+        *) printf 'Ignoring invalid shared cyber-ware theme in %s.\n' "$shared_theme_file" >&2 ;;
+    esac
+fi
 theme=${theme:-synthwave}
 case "$theme" in
     synthwave|greenline) ;;

@@ -70,6 +70,17 @@ if [ ! -e "$config_dir/config.json" ]; then
     install -m 600 "$project_dir/config.example.json" "$config_dir/config.json"
 fi
 
+shared_theme_file="${XDG_CONFIG_HOME:-$HOME/.config}/cyber-ware/theme"
+if [ -f "$shared_theme_file" ]; then
+    shared_theme=$(sed -n '1p' "$shared_theme_file")
+    case "$shared_theme" in
+        synthwave|greenline)
+            CYBER_WALL_CONFIG="$config_dir/config.json" "$prefix/bin/cyber-wall" --theme "$shared_theme"
+            ;;
+        *) printf 'Ignoring invalid shared cyber-ware theme in %s.\n' "$shared_theme_file" >&2 ;;
+    esac
+fi
+
 printf 'Installed cyber-wall commands in %s/bin\n' "$prefix"
 printf 'Configuration: %s/config.json\n' "$config_dir"
 printf '%s\n' 'Uninstall with cyber-wall --uninstall; add --purge only if you also want to remove cyber-wall settings and saved data.'

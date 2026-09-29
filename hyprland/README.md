@@ -15,6 +15,12 @@ When upgrading an older modular config, the installer preserves existing
 `environment.lua` and `monitors.lua` modules by loading them from a newly
 created `hyprland.local.lua` (unless that local file already exists).
 
+The shared theme command, `cyber-ware --theme greenline|synthwave`, controls
+the window and group border palette in `appearance.lua`. It also synchronizes
+the same selection to installed theme-aware cyber-ware components. The shared
+selection is stored as plain text at `~/.config/cyber-ware/theme` (or under
+`$XDG_CONFIG_HOME`).
+
 The config is an opinionated integration profile, not a minimal Hyprland install.
 It expects the relevant programs and cyber-ware components to be installed.
 Install each optional component from its own directory and follow its README.

@@ -1,0 +1,92 @@
+#!/bin/sh
+# cyber-ware-managed-cli
+set -eu
+
+usage() {
+    cat <<'EOF'
+Usage:
+  cyber-ware --theme [synthwave|greenline]
+  cyber-ware --help
+
+Show or switch the shared cyber-ware theme. Theme-aware installed components
+are updated, and Hyprland is reloaded when available.
+EOF
+}
+
+config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+theme_file=$config_home/cyber-ware/theme
+
+current_theme() {
+    if [ -f "$theme_file" ]; then
+        IFS= read -r selected < "$theme_file" || selected=
+        case "$selected" in synthwave|greenline) printf '%s\n' "$selected"; return ;; esac
+    fi
+    printf '%s\n' synthwave
+}
+
+case "${1:-}" in
+    --help|-h)
+        [ "$#" -eq 1 ] || { printf '%s\n' 'Use cyber-ware --help by itself.' >&2; exit 2; }
+        usage
+        exit 0
+        ;;
+    --theme)
+        case "$#" in
+            1)
+                printf 'Current theme: %s; available: synthwave, greenline\n' "$(current_theme)"
+                exit 0
+                ;;
+            2) theme=$2 ;;
+            *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline]' >&2; exit 2 ;;
+        esac
+        ;;
+    *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline]' >&2; exit 2 ;;
+esac
+
+case "$theme" in
+    synthwave|greenline) ;;
+    *) printf 'Unknown theme %s; choose synthwave or greenline.\n' "$theme" >&2; exit 2 ;;
+esac
+case "$config_home" in /|"") printf '%s\n' 'Refusing an unsafe configuration directory.' >&2; exit 1 ;; esac
+if [ -L "$theme_file" ] || { [ -e "$theme_file" ] && [ ! -f "$theme_file" ]; }; then
+    printf 'Refusing to replace an unsafe theme file: %s\n' "$theme_file" >&2
+    exit 1
+fi
+
+mkdir -p "$(dirname -- "$theme_file")"
+temporary=$(mktemp "$theme_file.XXXXXX")
+trap 'rm -f -- "$temporary"' EXIT HUP INT TERM
+printf '%s\n' "$theme" > "$temporary"
+chmod 600 "$temporary"
+mv -f -- "$temporary" "$theme_file"
+trap - EXIT HUP INT TERM
+printf 'Shared theme set to %s.\n' "$theme"
+
+failures=
+for component in cyber-wall cyber-signal cyber-panel cyber-jackout; do
+    if command -v "$component" >/dev/null 2>&1; then
+        if "$component" --theme "$theme"; then
+            :
+        else
+            printf 'Could not update %s; its theme may need attention.\n' "$component" >&2
+            failures="$failures $component"
+        fi
+    else
+        printf 'Skipping %s (not installed).\n' "$component"
+    fi
+done
+
+if command -v hyprctl >/dev/null 2>&1; then
+    if hyprctl reload >/dev/null 2>&1; then
+        printf '%s\n' 'Reloaded Hyprland; the window and group border palette is updated.'
+    else
+        printf '%s\n' 'Could not reload Hyprland; run `hyprctl reload` in the active session to apply border colors.' >&2
+    fi
+else
+    printf '%s\n' 'hyprctl is unavailable; run `hyprctl reload` in the active session to apply border colors.' >&2
+fi
+
+if [ -n "$failures" ]; then
+    printf 'Theme state is saved, but these components failed:%s\n' "$failures" >&2
+    exit 1
+fi

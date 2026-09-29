@@ -52,6 +52,14 @@ if [ -f "$config_home/cyber-signal/config.json" ]; then
         "$config_home/cyber-signal/config.json" 2>/dev/null || printf '%s' synthwave)
     case "$configured_theme" in synthwave|greenline) theme=$configured_theme ;; esac
 fi
+shared_theme_file=$config_home/cyber-ware/theme
+if [ -f "$shared_theme_file" ]; then
+    shared_theme=$(sed -n '1p' "$shared_theme_file")
+    case "$shared_theme" in
+        synthwave|greenline) theme=$shared_theme ;;
+        *) printf 'Ignoring invalid shared cyber-ware theme in %s.\n' "$shared_theme_file" >&2 ;;
+    esac
+fi
 install -m 644 "$app_dir/src/cyber_signal/themes/$theme.mako" "$config_home/cyber-signal/active.mako"
 
 escape_sed() { printf '%s' "$1" | sed 's/[\\&#]/\\&/g'; }

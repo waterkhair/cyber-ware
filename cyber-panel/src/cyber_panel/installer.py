@@ -63,6 +63,17 @@ def main() -> int:
             print(f"Cannot safely preserve existing cyber-panel settings: {error}", file=sys.stderr)
             return 1
     theme = settings.get("theme", "synthwave")
+    shared_theme_file = config_home / "cyber-ware/theme"
+    if shared_theme_file.is_file():
+        try:
+            shared_theme = shared_theme_file.read_text(encoding="utf-8").splitlines()[0].strip()
+        except (OSError, IndexError):
+            shared_theme = ""
+        if shared_theme in ("synthwave", "greenline"):
+            theme = shared_theme
+            settings["theme"] = theme
+        elif shared_theme:
+            print(f"Ignoring invalid shared cyber-ware theme in {shared_theme_file}.", file=sys.stderr)
     if theme not in ("synthwave", "greenline"):
         print(f"Unknown saved theme {theme!r}; using synthwave.", file=sys.stderr)
         theme = "synthwave"
