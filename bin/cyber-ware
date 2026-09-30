@@ -44,11 +44,18 @@ uninstall() {
         printf '%s\n' 'No valid cyber-ware installation record found; refusing to guess which files to remove.' >&2
         return 1
     fi
-    if [ "$(sed -n '1p' "$install_state")" != 'version=1' ]; then
+    state_version=$(sed -n '1p' "$install_state")
+    if [ "$state_version" != 'version=1' ] && [ "$state_version" != 'version=2' ]; then
         printf '%s\n' 'Unsupported cyber-ware installation record; no changes made.' >&2
         return 1
     fi
+    command_dir=$(sed -n 's/^command_dir=//p' "$install_state")
+    [ -n "$command_dir" ] || command_dir=$prefix/bin
+    case "$command_dir" in /|"") printf '%s\n' 'Unsafe command path in install record.' >&2; return 1 ;; esac
+    command_path=$command_dir/cyber-ware
     backup_name=$(sed -n 's/^backup_name=//p' "$install_state")
+    [ "$backup_name" != none ] || backup_name=
+    generated_local_hash=$(sed -n 's/^local_config_sha256=//p' "$install_state")
     created_local=$(sed -n 's/^created_local_config=//p' "$install_state")
     case "$created_local" in yes|no) ;; *) printf '%s\n' 'Invalid installation record; no changes made.' >&2; return 1 ;; esac
     backup_dir=
@@ -98,8 +105,10 @@ uninstall() {
             "$module_dir/autostart.lua" "$module_dir/keybindings.lua"
         rmdir "$module_dir" 2>/dev/null || true
     fi
-    if [ "$created_local" = yes ] && [ -f "$local_config" ] && \
-        [ "$(sed -n '1p' "$local_config")" = '-- cyber-ware-migrated-local-config' ]; then
+    if [ "$created_local" = yes ] && [ -f "$local_config" ] && [ "$generated_local_hash" = unknown ]; then
+        printf 'Kept the migrated local config because this older install has no content hash: %s\n' "$local_config"
+    elif [ "$created_local" = yes ] && [ -f "$local_config" ] && \
+        { [ -n "$generated_local_hash" ] && [ "$(sha256sum "$local_config" | cut -d ' ' -f 1)" = "$generated_local_hash" ]; }; then
         rm -f -- "$local_config"
     elif [ "$created_local" = yes ] && [ -e "$local_config" ]; then
         printf 'Kept your edited local override at %s; recovery copy is also in %s.\n' "$local_config" "$recovery_dir"
@@ -155,8 +164,11 @@ printf 'Shared theme set to %s.\n' "$theme"
 
 failures=
 for component in cyber-wall cyber-signal cyber-panel cyber-jackout; do
-    if command -v "$component" >/dev/null 2>&1; then
-        if "$component" --theme "$theme"; then
+    configured_bin=$(sed -n '1p' "$config_home/cyber-ware/bin-path" 2>/dev/null || true)
+    component_command=${configured_bin:-"${PREFIX:-$HOME/.local}/bin"}/$component
+    if [ -x "$component_command" ] || command -v "$component" >/dev/null 2>&1; then
+        if { [ -x "$component_command" ] && "$component_command" --theme "$theme"; } || \
+           { [ ! -x "$component_command" ] && "$component" --theme "$theme"; }; then
             :
         else
             printf 'Could not update %s; its theme may need attention.\n' "$component" >&2

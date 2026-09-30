@@ -1,8 +1,10 @@
 #!/bin/sh
 set -eu
 
+script_name=${0##*/}
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 project_dir=$script_dir
+case "$script_name" in sh|bash|dash|-sh|-bash) project_dir= ;; esac
 download_dir=
 stage_dir=
 cleanup() {
@@ -12,11 +14,13 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 
-if [ ! -f "$project_dir/bin/cyber-scan" ]; then
+if [ -z "$project_dir" ] || [ ! -f "$project_dir/bin/cyber-scan" ]; then
     command -v curl >/dev/null 2>&1 || { printf '%s\n' 'curl is required to download cyber-scan.' >&2; exit 1; }
     command -v tar >/dev/null 2>&1 || { printf '%s\n' 'tar is required to unpack cyber-scan.' >&2; exit 1; }
     download_dir=$(mktemp -d "${TMPDIR:-/tmp}/cyber-scan-install.XXXXXX")
-    if ! curl -fsSL 'https://github.com/WaterKhair/cyber-ware/archive/refs/heads/main.tar.gz' \
+    revision=$(curl -fsSL https://api.github.com/repos/WaterKhair/cyber-ware/commits/main | sed -n 's/.*"sha": *"\([0-9a-f]*\)".*/\1/p' | sed -n '1p')
+    [ "${#revision}" -eq 40 ] || { printf '%s\n' 'Could not resolve cyber-ware revision.' >&2; exit 1; }
+    if ! curl -fsSL "https://github.com/WaterKhair/cyber-ware/archive/$revision.tar.gz" \
         | tar -xz --strip-components=1 -C "$download_dir"; then
         printf '%s\n' 'Could not download cyber-scan. Check that cyber-ware has a public main branch.' >&2
         exit 1

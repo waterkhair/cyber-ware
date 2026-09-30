@@ -17,6 +17,25 @@ def main() -> int:
     source = Path(__file__).resolve().parents[2]
     app_dir = data_home / "cyber-console"
     config_file = config_home / "cyber-console/config.json"
+    command_dir = prefix / "bin"
+    command_path = command_dir / "cyber-console"
+
+    if command_dir.is_symlink() or data_home.is_symlink():
+        print("Refusing a symlinked command or data directory.", file=sys.stderr)
+        return 1
+    if app_dir.is_symlink() or (app_dir.exists() and not (app_dir / ".cyber-console-managed").is_file()):
+        print(f"Refusing to replace unowned or symlinked application directory: {app_dir}", file=sys.stderr)
+        return 1
+    if any(path.is_symlink() for path in (app_dir / ".cyber-console-managed", app_dir / "src", app_dir / "src/cyber_console", app_dir / "config.example.json")):
+        print(f"Refusing symlinked cyber-console program files: {app_dir}", file=sys.stderr)
+        return 1
+    if command_path.is_symlink() or (command_path.exists() and
+            (not command_path.is_file() or "# cyber-console-managed-command" not in command_path.read_text(encoding="utf-8", errors="replace"))):
+        print(f"Refusing to replace an unowned command or symlink: {command_path}", file=sys.stderr)
+        return 1
+    if config_file.parent.is_symlink() or config_file.is_symlink() or (config_file.exists() and not config_file.is_file()):
+        print(f"Refusing unsafe configuration destination: {config_file}", file=sys.stderr)
+        return 1
 
     required = ("python3", "ghostty", "hyprctl")
     missing = [name for name in required if shutil.which(name) is None]
@@ -55,15 +74,47 @@ def main() -> int:
         config_file.write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
         config_file.chmod(0o600)
 
-    if app_dir.exists():
-        shutil.rmtree(app_dir)
-    (app_dir / "src").mkdir(parents=True)
-    shutil.copytree(source / "src/cyber_console", app_dir / "src/cyber_console")
-    shutil.copy2(template_path, app_dir / "config.example.json")
-    command_dir = prefix / "bin"
+    stage = app_dir.with_name(f".{app_dir.name}.stage-{os.getpid()}")
+    if stage.exists() or stage.is_symlink():
+        print(f"Refusing to reuse an existing staging path: {stage}", file=sys.stderr)
+        return 1
+    try:
+        (stage / "src").mkdir(parents=True)
+        shutil.copytree(source / "src/cyber_console", stage / "src/cyber_console")
+        shutil.copy2(template_path, stage / "config.example.json")
+        (stage / ".cyber-console-managed").write_text("managed by cyber-console installer\n", encoding="utf-8")
+        if app_dir.exists():
+            app_src = app_dir / "src"
+            app_src.mkdir(parents=True, exist_ok=True)
+            target = app_src / "cyber_console"
+            previous = stage / "previous-cyber_console"
+            if target.exists():
+                target.replace(previous)
+            try:
+                (stage / "src/cyber_console").replace(target)
+            except OSError:
+                if previous.exists():
+                    previous.replace(target)
+                raise
+            if not (app_dir / "config.example.json").exists():
+                (stage / "config.example.json").replace(app_dir / "config.example.json")
+            if not (app_dir / ".cyber-console-managed").exists():
+                (stage / ".cyber-console-managed").replace(app_dir / ".cyber-console-managed")
+            if previous.exists():
+                shutil.rmtree(previous)
+        else:
+            stage.replace(app_dir)
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage)
     command_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source / "bin/cyber-console", command_dir / "cyber-console")
-    (command_dir / "cyber-console").chmod(0o755)
+    command_tmp = command_dir / f".cyber-console-{os.getpid()}"
+    try:
+        command_tmp.write_text((source / "bin/cyber-console").read_text(encoding="utf-8"), encoding="utf-8")
+        command_tmp.chmod(0o755)
+        command_tmp.replace(command_path)
+    finally:
+        command_tmp.unlink(missing_ok=True)
 
     print(f"Installed cyber-console in {command_dir} and {app_dir}.")
     print(f"Configuration: {config_file}")

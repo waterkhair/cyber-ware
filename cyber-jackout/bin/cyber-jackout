@@ -8,6 +8,7 @@ state_home=${XDG_STATE_HOME:-"${HOME}/.local/state"}
 theme_config="$config_home/cyber-jackout/theme"
 state_dir="$state_home/cyber-jackout"
 wlogout_style="$config_home/wlogout/style.css"
+wlogout_layout="$config_home/wlogout/layout"
 
 atomic_copy() {
     local source=$1 destination=$2 temporary
@@ -106,12 +107,13 @@ check_requirements() {
 }
 
 uninstall() {
-    local purge=${1:-0} original_present expected_hash current_hash
+    local purge=${1:-0} original_present expected_hash current_hash original_layout_present expected_layout_hash current_layout_hash
     local prefix=${PREFIX:-"${HOME}/.local"}
     local data_home=${XDG_DATA_HOME:-"${HOME}/.local/share"}
     local command_path="$prefix/bin/cyber-jackout"
     local installed_app_dir="$data_home/cyber-jackout"
     local backup_style="$state_dir/backups/style.css"
+    local backup_layout="$state_dir/backups/layout"
     if [[ -L "$installed_app_dir" || ! -f "$installed_app_dir/.cyber-jackout-managed" || ! -f "$state_dir/installed" ]]; then
         printf '%s\n' 'Refusing to remove cyber-jackout files: installation marker is missing or unsafe.' >&2
         return 1
@@ -148,11 +150,39 @@ uninstall() {
     elif [[ -e "$wlogout_style" ]]; then
         rm -- "$wlogout_style"
     fi
+    if [[ -f "$state_dir/original-layout-existed" && -f "$state_dir/layout.sha256" ]]; then
+        original_layout_present=$(<"$state_dir/original-layout-existed")
+        expected_layout_hash=$(<"$state_dir/layout.sha256")
+        if [[ "$original_layout_present" != yes && "$original_layout_present" != no ]]; then
+            printf '%s\n' 'Refusing to uninstall: layout recovery metadata is invalid.' >&2
+            return 1
+        fi
+        if [[ -L "$wlogout_layout" ]]; then
+            printf 'Refusing to restore a symlinked wlogout layout: %s\n' "$wlogout_layout" >&2
+            return 1
+        fi
+        if [[ -f "$wlogout_layout" ]]; then
+            current_layout_hash=$(file_hash "$wlogout_layout")
+            if [[ "$current_layout_hash" != "$expected_layout_hash" ]]; then
+                mkdir -p -- "$state_dir/before-uninstall"
+                cp -p -- "$wlogout_layout" "$state_dir/before-uninstall/layout"
+                printf 'Kept your edited wlogout layout; a recovery copy is at %s.\n' "$state_dir/before-uninstall/layout"
+                original_layout_present=edited
+            fi
+        fi
+        if [[ "$original_layout_present" == yes ]]; then
+            [[ -f "$backup_layout" ]] || { printf 'Original wlogout layout backup is missing: %s\n' "$backup_layout" >&2; return 1; }
+            atomic_copy "$backup_layout" "$wlogout_layout"
+        elif [[ "$original_layout_present" == no ]]; then
+            rm -f -- "$wlogout_layout"
+        fi
+    fi
     rm -- "$command_path"
     rm -rf -- "$installed_app_dir"
+    rm -f -- "$state_dir/installed"
     printf 'Removed cyber-jackout from %s.\n' "$installed_app_dir"
     printf '%s\n' 'The original wlogout stylesheet was restored when available.'
-    printf '%s\n' 'Hyprland and wlogout layout references were not changed; remove them separately if desired.'
+    printf '%s\n' 'Hyprland references were not changed. The original wlogout layout was restored when available; user edits were preserved.'
     if ((purge)); then
         rm -rf -- "$config_home/cyber-jackout" "$state_dir"
         printf '%s\n' 'cyber-jackout theme settings and recovery copies were purged.'

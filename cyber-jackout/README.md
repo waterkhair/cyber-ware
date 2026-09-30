@@ -61,7 +61,12 @@ It refuses to overwrite unrelated command or data files.
 The installer applies the selected theme to `~/.config/wlogout/style.css`
 (default: `synthwave`). Before replacing an existing stylesheet, it saves the
 original in `~/.local/state/cyber-jackout/backups/` for uninstall recovery.
-It does not edit Hyprland bindings or the wlogout layout.
+It also installs a managed `~/.config/wlogout/layout`. Before first
+replacement, an existing layout is copied to cyber-jackout's recovery state.
+Logout, reboot, and shutdown invoke the installed cyber-jackout command so its
+cleanup sequence runs. Lock uses `hyprlock` when present, otherwise
+`loginctl lock-session`; suspend uses `systemctl suspend`. If you edit the
+managed layout later, upgrades and uninstall preserve the edited file.
 
 ## Usage
 
@@ -88,9 +93,8 @@ journalctl --user -t cyber-jackout
 
 ## Hyprland and wlogout integration
 
-The installer manages the wlogout stylesheet but leaves the compositor and
-power-menu layout to you. Point the logout, reboot, and shutdown entries in
-your wlogout layout at:
+The installer manages the wlogout stylesheet and layout, and leaves Hyprland
+bindings to you. For a custom layout, point logout, reboot, and shutdown at:
 
 ```text
 cyber-jackout
@@ -108,11 +112,11 @@ separate; this component only handles logout, reboot, and poweroff.
 cyber-jackout --uninstall
 ```
 
-Uninstall restores the previous wlogout stylesheet, when one existed, and
-removes the command and program directory. If you edited the managed stylesheet,
-cyber-jackout preserves that edited copy under
+Uninstall restores the previous wlogout stylesheet and layout when the managed
+files are unchanged, and removes the command and program directory. If you
+edited either managed file, cyber-jackout preserves that edited copy under
 `~/.local/state/cyber-jackout/before-uninstall/` before restoring the original.
-Hyprland bindings and wlogout layout references are not removed. Settings and
+Hyprland bindings are not removed. Settings and
 recovery copies are retained unless `--purge` is explicitly confirmed.
 
 ## License

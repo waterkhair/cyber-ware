@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import hashlib
+import shlex
 from pathlib import Path
 
 
@@ -22,6 +23,30 @@ def main() -> int:
     state_dir = state_home / "cyber-panel"
     backup_dir = state_dir / "backups"
     state_file = state_dir / "install.json"
+    command_dir = prefix / "bin"
+    command_path = command_dir / "cyber-panel"
+
+    for directory in (waybar_dir, state_dir, command_dir):
+        if directory.is_symlink():
+            print(f"Refusing symlinked destination directory: {directory}", file=sys.stderr)
+            return 1
+    if (config_home / "cyber-panel").is_symlink():
+        print(f"Refusing symlinked settings directory: {config_home / 'cyber-panel'}", file=sys.stderr)
+        return 1
+    for target in (state_file, config_home / "cyber-panel/config.json"):
+        if target.is_symlink() or (target.exists() and not target.is_file()):
+            print(f"Refusing unsafe state/config destination: {target}", file=sys.stderr)
+            return 1
+    if app_dir.is_symlink() or (app_dir.exists() and not (app_dir / ".cyber-panel-managed").is_file()):
+        print(f"Refusing to replace unowned or symlinked application directory: {app_dir}", file=sys.stderr)
+        return 1
+    if any(path.is_symlink() for path in (app_dir / ".cyber-panel-managed", app_dir / "src", app_dir / "src/cyber_panel", app_dir / "themes", app_dir / "config.jsonc")):
+        print(f"Refusing symlinked cyber-panel program files: {app_dir}", file=sys.stderr)
+        return 1
+    if command_path.is_symlink() or (command_path.exists() and
+            (not command_path.is_file() or "# cyber-panel-managed-command" not in command_path.read_text(encoding="utf-8", errors="replace"))):
+        print(f"Refusing to replace an unowned command or symlink: {command_path}", file=sys.stderr)
+        return 1
 
     missing = [name for name in ("waybar", "hyprctl", "python3") if shutil.which(name) is None]
     if missing:
@@ -83,19 +108,62 @@ def main() -> int:
     for name in ("config.jsonc", "style.css"):
         target = waybar_dir / name
         backup = backup_dir / name
+        if target.is_symlink() or (target.exists() and not target.is_file()):
+            print(f"Refusing unsafe Waybar destination: {target}", file=sys.stderr)
+            return 1
         if name not in state["originals"]:
             state["originals"][name] = target.is_file()
             if target.is_file():
                 shutil.copy2(target, backup)
+        elif target.is_file() and name in state.get("installed_hashes", {}):
+            current_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+            if current_hash != state["installed_hashes"][name]:
+                before_update = state_dir / "before-update" / name
+                before_update.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(target, before_update)
+                print(f"Preserved edited Waybar file at {before_update} before updating it.")
 
-    if app_dir.exists():
-        shutil.rmtree(app_dir)
-    (app_dir / "src").mkdir(parents=True)
-    shutil.copytree(source / "src/cyber_panel", app_dir / "src/cyber_panel")
-    shutil.copytree(source / "themes", app_dir / "themes")
-    shutil.copy2(source / "config.jsonc", app_dir / "config.jsonc")
+    stage = app_dir.with_name(f".{app_dir.name}.stage-{os.getpid()}")
+    if stage.exists() or stage.is_symlink():
+        print(f"Refusing existing staging path: {stage}", file=sys.stderr)
+        return 1
+    try:
+        (stage / "src").mkdir(parents=True)
+        shutil.copytree(source / "src/cyber_panel", stage / "src/cyber_panel")
+        shutil.copytree(source / "themes", stage / "themes")
+        shutil.copy2(source / "config.jsonc", stage / "config.jsonc")
+        (stage / ".cyber-panel-managed").write_text("managed by cyber-panel installer\n", encoding="utf-8")
+        if app_dir.exists():
+            for relative in (Path("src/cyber_panel"), Path("themes"), Path("config.jsonc")):
+                target = app_dir / relative
+                staged = stage / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                old = stage / ("previous-" + relative.name)
+                if target.exists():
+                    target.replace(old)
+                try:
+                    staged.replace(target)
+                except OSError:
+                    if old.exists():
+                        old.replace(target)
+                    raise
+                if old.is_dir():
+                    shutil.rmtree(old)
+                elif old.exists():
+                    old.unlink()
+            if not (app_dir / ".cyber-panel-managed").exists():
+                (stage / ".cyber-panel-managed").replace(app_dir / ".cyber-panel-managed")
+        else:
+            stage.replace(app_dir)
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage)
 
-    config_bytes = (source / "config.jsonc").read_bytes()
+    config_text = (source / "config.jsonc").read_text(encoding="utf-8")
+    console = shlex.quote(str(prefix / "bin/cyber-console"))
+    config_text = config_text.replace('"cyber-console wiremix"', json.dumps(f"{console} wiremix"))
+    config_text = config_text.replace('"cyber-console impala"', json.dumps(f"{console} impala"))
+    config_bytes = config_text.encode("utf-8")
     config_target = waybar_dir / "config.jsonc"
     config_target.write_bytes(config_bytes)
     config_target.chmod(0o644)
@@ -114,10 +182,14 @@ def main() -> int:
     state_file.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     state_file.chmod(0o600)
 
-    command_dir = prefix / "bin"
     command_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source / "bin/cyber-panel", command_dir / "cyber-panel")
-    (command_dir / "cyber-panel").chmod(0o755)
+    command_tmp = command_dir / f".cyber-panel-{os.getpid()}"
+    try:
+        command_tmp.write_text((source / "bin/cyber-panel").read_text(encoding="utf-8"), encoding="utf-8")
+        command_tmp.chmod(0o755)
+        command_tmp.replace(command_path)
+    finally:
+        command_tmp.unlink(missing_ok=True)
     print(f"Installed cyber-panel command in {command_dir}.")
     print(f"Waybar configuration: {config_target}")
     print(f"Theme: {theme} (switch with cyber-panel --theme greenline|synthwave)")

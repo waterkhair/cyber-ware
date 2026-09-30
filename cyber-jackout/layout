@@ -1,0 +1,30 @@
+{
+    "label": "lock",
+    "action": "@LOCK_ACTION@",
+    "text": "Lock",
+    "keybind": "l"
+},
+{
+    "label": "logout",
+    "action": "@JACKOUT@ logout",
+    "text": "Logout",
+    "keybind": "e"
+},
+{
+    "label": "suspend",
+    "action": "systemctl suspend",
+    "text": "Suspend",
+    "keybind": "u"
+},
+{
+    "label": "reboot",
+    "action": "@JACKOUT@ reboot",
+    "text": "Reboot",
+    "keybind": "r"
+},
+{
+    "label": "shutdown",
+    "action": "@JACKOUT@ poweroff",
+    "text": "Shutdown",
+    "keybind": "s"
+}

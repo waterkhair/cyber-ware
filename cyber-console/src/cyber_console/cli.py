@@ -165,13 +165,27 @@ def toggle(name: str, config: dict) -> int:
 
 def uninstall(purge: bool) -> int:
     p = paths()
+    command = p["command"]
+    if command.is_symlink() or (command.exists() and "# cyber-console-managed-command" not in command.read_text(encoding="utf-8", errors="replace")):
+        print(f"Refusing to remove an unowned command or symlink: {command}", file=sys.stderr)
+        return 1
+    if p["data"].is_symlink() or (p["data"].exists() and not (p["data"] / ".cyber-console-managed").is_file()):
+        print(f"Refusing to remove an unowned or symlinked application directory: {p['data']}", file=sys.stderr)
+        return 1
     if purge:
         print("This removes cyber-console configuration and saved tool settings.")
         if input("Type cyber-console to confirm: ").strip() != "cyber-console":
             print("Cancelled.")
             return 1
-    p["command"].unlink(missing_ok=True)
-    shutil.rmtree(p["data"], ignore_errors=True)
+    command.unlink(missing_ok=True)
+    shutil.rmtree(p["data"] / "src/cyber_console", ignore_errors=True)
+    (p["data"] / "config.example.json").unlink(missing_ok=True)
+    (p["data"] / ".cyber-console-managed").unlink(missing_ok=True)
+    for directory in (p["data"] / "src", p["data"]):
+        try:
+            directory.rmdir()
+        except OSError:
+            pass
     if purge:
         p["config"].unlink(missing_ok=True)
         try:

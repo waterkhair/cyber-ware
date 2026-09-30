@@ -79,6 +79,36 @@ class CyberConsoleTests(unittest.TestCase):
                 self.assertEqual(installer.main(), 1)
             self.assertFalse((root / "config/cyber-console/config.json").exists())
 
+    def test_installer_refuses_command_symlink_without_touching_target(self):
+        with tempfile.TemporaryDirectory(prefix="cyber-console-symlink-test-") as temp:
+            root = Path(temp)
+            env = {
+                "HOME": str(root), "XDG_CONFIG_HOME": str(root / "config"),
+                "XDG_DATA_HOME": str(root / "data"), "PREFIX": str(root / "local"),
+            }
+            target = root / "unrelated-command"
+            target.write_text("keep this byte-for-byte\n", encoding="utf-8")
+            command_dir = root / "local/bin"
+            command_dir.mkdir(parents=True)
+            (command_dir / "cyber-console").symlink_to(target)
+            with patch.dict(os.environ, env, clear=False), patch("cyber_console.installer.shutil.which", return_value="/usr/bin/found"):
+                self.assertEqual(installer.main(), 1)
+            self.assertEqual(target.read_text(encoding="utf-8"), "keep this byte-for-byte\n")
+
+    def test_installer_refuses_unmarked_application_directory(self):
+        with tempfile.TemporaryDirectory(prefix="cyber-console-collision-test-") as temp:
+            root = Path(temp)
+            env = {
+                "HOME": str(root), "XDG_CONFIG_HOME": str(root / "config"),
+                "XDG_DATA_HOME": str(root / "data"), "PREFIX": str(root / "local"),
+            }
+            unrelated = root / "data/cyber-console/user-file"
+            unrelated.parent.mkdir(parents=True)
+            unrelated.write_text("user-owned\n", encoding="utf-8")
+            with patch.dict(os.environ, env, clear=False), patch("cyber_console.installer.shutil.which", return_value="/usr/bin/found"):
+                self.assertEqual(installer.main(), 1)
+            self.assertEqual(unrelated.read_text(encoding="utf-8"), "user-owned\n")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import shutil
+import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -19,7 +21,7 @@ Usage:
   cyber-signal --check network|updates|disk  Run a check once
   cyber-signal --watch network               Monitor network state changes
   cyber-signal --test                        Send a preview notification
-  cyber-signal --theme [synthwave|greenline] Show or change the Mako theme
+  cyber-signal --theme [synthwave|greenline] [--no-reload] Save/apply a theme
   cyber-signal --enable                      Enable user services and timers
   cyber-signal --disable                     Stop and disable user services
   cyber-signal --status                      Show component status
@@ -30,7 +32,7 @@ Checks are configured in ~/.config/cyber-signal/config.json.
 """
 
 
-def _theme(name: str | None) -> int:
+def _theme(name: str | None, *, reload_mako: bool = True) -> int:
     config = load_config()
     if name is None:
         print(f"Current theme: {config['theme']}")
@@ -51,7 +53,7 @@ def _theme(name: str | None) -> int:
 
     mako_config = _write_mako_styles(theme_text)
     makoctl = shutil.which("makoctl")
-    if mako_config and makoctl:
+    if reload_mako and mako_config and makoctl:
         reload_result = subprocess.run([makoctl, "reload"], check=False,
                                        text=True, capture_output=True)
         if reload_result.returncode != 0:
@@ -59,7 +61,7 @@ def _theme(name: str | None) -> int:
             print(f"Theme files were updated, but Mako could not reload: {detail or 'unknown error'}",
                   file=sys.stderr)
             return 1
-    elif not mako_config:
+    elif reload_mako and not mako_config:
         print("Mako is not installed; the theme is saved but cannot be applied yet.", file=sys.stderr)
     print(f"Theme set to {name}; Mako styles: {config_home() / 'mako/config'}")
     return 0
@@ -134,6 +136,8 @@ def _write_mako_styles(theme_text: str) -> bool:
         return False
     path = config_home() / "mako/config"
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise RuntimeError(f"refusing unsafe Mako config destination: {path}")
     try:
         original = path.read_text(encoding="utf-8")
     except FileNotFoundError:
@@ -167,7 +171,14 @@ def _write_mako_styles(theme_text: str) -> bool:
     if base and not base.endswith("\n\n"):
         base += "\n"
     block = f"{start}\n{theme_text.rstrip()}\n{end}\n"
-    path.write_text(base + block, encoding="utf-8")
+    fd, temporary = tempfile.mkstemp(prefix=".config.cyber-signal.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(base + block)
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
     return True
 
 
@@ -177,6 +188,8 @@ def _remove_mako_block() -> bool:
     try:
         original = path.read_text(encoding="utf-8")
     except FileNotFoundError:
+        return False
+    if path.is_symlink():
         return False
     start = "# BEGIN cyber-signal managed theme"
     end = "# END cyber-signal managed theme"
@@ -202,7 +215,14 @@ def _remove_mako_block() -> bool:
         # Incomplete markers: preserve the file instead of risking user config.
         return False
     if removed:
-        path.write_text("".join(output), encoding="utf-8")
+        fd, temporary = tempfile.mkstemp(prefix=".config.cyber-signal.", dir=path.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                stream.write("".join(output))
+            os.chmod(temporary, 0o600)
+            os.replace(temporary, path)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
         makoctl = shutil.which("makoctl")
         if makoctl:
             subprocess.run([makoctl, "reload"], check=False, stdout=subprocess.DEVNULL,
@@ -219,21 +239,36 @@ def _uninstall(args: list[str]) -> int:
         if answer != "cyber-signal":
             print("Purge cancelled; nothing was removed.")
             return 1
-    _disable()
     executable = Path.home() / ".local/bin/cyber-signal"
+    manifest_owned = False
     try:
         import json
         manifest = json.loads(install_manifest().read_text(encoding="utf-8"))
         executable = Path(manifest.get("executable", executable))
+        manifest_owned = manifest.get("executable") == str(executable)
     except (FileNotFoundError, ValueError, OSError):
         pass
+    if executable.is_symlink() or (executable.exists() and "# cyber-signal-managed-command" not in executable.read_text(encoding="utf-8", errors="replace") and not manifest_owned):
+        print(f"Refusing to remove an unowned command or symlink: {executable}", file=sys.stderr)
+        return 1
+    if app_dir().is_symlink() or (app_dir().exists() and not (app_dir() / ".cyber-signal-managed").is_file() and not manifest_owned):
+        print(f"Refusing to remove an unowned or symlinked application directory: {app_dir()}", file=sys.stderr)
+        return 1
+    _disable()
     unit_dir = config_home() / "systemd/user"
     for name in ("network.service", "updates.service", "updates.timer", "disk.service", "disk.timer"):
         (unit_dir / f"cyber-signal-{name}").unlink(missing_ok=True)
     if shutil.which("systemctl"):
         _systemctl("daemon-reload")
     executable.unlink(missing_ok=True)
-    shutil.rmtree(app_dir(), ignore_errors=True)
+    shutil.rmtree(app_dir() / "src/cyber_signal", ignore_errors=True)
+    (app_dir() / "install.json").unlink(missing_ok=True)
+    (app_dir() / ".cyber-signal-managed").unlink(missing_ok=True)
+    for directory in (app_dir() / "src", app_dir()):
+        try:
+            directory.rmdir()
+        except OSError:
+            pass
     removed_mako_block = _remove_mako_block()
     print("Removed cyber-signal command, application files, and user service units.")
     if removed_mako_block:
@@ -273,8 +308,12 @@ def main() -> int:
             from .notify import send
             send("cyber-signal test", "Notifications are reaching your desktop.")
             return 0
-        if args[0] == "--theme" and len(args) <= 2:
-            return _theme(args[1] if len(args) == 2 else None)
+        if args[0] == "--theme" and len(args) <= 3:
+            no_reload = "--no-reload" in args[1:]
+            theme_args = [arg for arg in args[1:] if arg != "--no-reload"]
+            if len(theme_args) > 1:
+                raise ValueError("usage: cyber-signal --theme [synthwave|greenline] [--no-reload]")
+            return _theme(theme_args[0] if theme_args else None, reload_mako=not no_reload)
         if args == ["--enable"]:
             return _enable()
         if args == ["--disable"]:

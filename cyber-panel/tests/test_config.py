@@ -46,11 +46,31 @@ class CyberPanelAssetsTests(unittest.TestCase):
             }
             with patch.dict(os.environ, env, clear=False), redirect_stdout(StringIO()):
                 self.assertEqual(installer.main(), 0)
+                installed_config = json.loads((waybar / "config.jsonc").read_text(encoding="utf-8"))
+                self.assertEqual(installed_config[0]["pulseaudio"]["on-click"], f"{root}/local/bin/cyber-console wiremix")
+                self.assertEqual(installed_config[0]["network"]["on-click"], f"{root}/local/bin/cyber-console impala")
                 self.assertNotEqual((waybar / "style.css").read_bytes(), original_style)
                 self.assertEqual(cli.main(["--uninstall"]), 0)
             self.assertEqual((waybar / "config.jsonc").read_bytes(), original_config)
             self.assertEqual((waybar / "style.css").read_bytes(), original_style)
             self.assertFalse((root / "local/bin/cyber-panel").exists())
+
+    def test_installer_refuses_symlinked_waybar_config(self):
+        with tempfile.TemporaryDirectory(prefix="cyber-panel-symlink-test-") as temp:
+            root = Path(temp)
+            waybar = root / "config/waybar"
+            waybar.mkdir(parents=True)
+            target = root / "unrelated-config"
+            target.write_text("user-owned config\n", encoding="utf-8")
+            (waybar / "config.jsonc").symlink_to(target)
+            env = {
+                "HOME": str(root), "XDG_CONFIG_HOME": str(root / "config"),
+                "XDG_DATA_HOME": str(root / "data"), "XDG_STATE_HOME": str(root / "state"),
+                "PREFIX": str(root / "local"),
+            }
+            with patch.dict(os.environ, env, clear=False), redirect_stdout(StringIO()):
+                self.assertEqual(installer.main(), 1)
+            self.assertEqual(target.read_text(encoding="utf-8"), "user-owned config\n")
 
     def test_theme_command_switches_css_and_persists_lowercase_name(self):
         with tempfile.TemporaryDirectory(prefix="cyber-panel-theme-test-") as temp:

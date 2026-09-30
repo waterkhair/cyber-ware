@@ -1,3 +1,4 @@
+# cyber-signal-managed-unit
 [Unit]
 Description=cyber-signal network state notifications
 After=graphical-session.target

@@ -1,14 +1,28 @@
 local navMod = "CTRL + SUPER"
 local moveMod = "CTRL + SUPER + ALT"
-local user_bin = os.getenv("CYBER_WARE_BIN") or ((os.getenv("HOME") or "") .. "/.local/bin")
+local home = os.getenv("HOME") or ""
+local config_home = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
+local bin_file = io.open(config_home .. "/cyber-ware/bin-path", "r")
+local configured_bin = bin_file and bin_file:read("*l") or nil
+if bin_file then bin_file:close() end
+local user_bin = os.getenv("CYBER_WARE_BIN") or configured_bin or (home .. "/.local/bin")
+
+local function shell_quote(value)
+    return "'" .. value:gsub("'", "'\\''") .. "'"
+end
+
+local function executable_file(path)
+    local probe = io.popen("test -x " .. shell_quote(path) .. " && printf yes")
+    if not probe then return false end
+    local result = probe:read("*a")
+    probe:close()
+    return result == "yes"
+end
 local function local_command(name, args)
     return user_bin .. "/" .. name .. (args and (" " .. args) or "")
 end
 local function local_command_available(name)
-    local file = io.open(local_command(name), "r")
-    if not file then return false end
-    file:close()
-    return true
+    return executable_file(local_command(name))
 end
 local function system_command_path(name)
     -- Avoid shelling out during config parsing: Hyprland's embedded Lua may
@@ -17,11 +31,7 @@ local function system_command_path(name)
     local search_path = (os.getenv("PATH") or "") .. ":/usr/local/bin:/usr/bin:/bin"
     for directory in search_path:gmatch("[^:]+") do
         local candidate = directory .. "/" .. name
-        local file = io.open(candidate, "rb")
-        if file then
-            file:close()
-            return candidate
-        end
+        if executable_file(candidate) then return candidate end
     end
     return nil
 end
@@ -32,9 +42,13 @@ local function bind_local_command(modifiers, key, name, args, description)
 end
 
 -- Requires the matching cyber-ware components and local helper commands.
-local ghostty = system_command_path("ghostty")
-if ghostty then
-    hl.bind(navMod .. " + T", hl.dsp.exec_cmd(ghostty), { description = "Open Ghostty" })
+local terminal
+for _, candidate in ipairs({ "ghostty", "kitty", "foot", "alacritty", "wezterm" }) do
+    terminal = system_command_path(candidate)
+    if terminal then break end
+end
+if terminal then
+    hl.bind(navMod .. " + T", hl.dsp.exec_cmd(terminal), { description = "Open terminal" })
 end
 bind_local_command(navMod, "B", "cyber-console", "bluetui", "Toggle floating Bluetui")
 bind_local_command(navMod, "V", "cyber-console", "wiremix", "Toggle floating Wiremix")

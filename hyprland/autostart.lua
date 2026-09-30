@@ -1,6 +1,10 @@
 -- Adapt this list to the applications and services installed on the machine.
 local home = os.getenv("HOME") or ""
-local user_bin = os.getenv("CYBER_WARE_BIN") or (home .. "/.local/bin")
+local config_home = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
+local bin_file = io.open(config_home .. "/cyber-ware/bin-path", "r")
+local configured_bin = bin_file and bin_file:read("*l") or nil
+if bin_file then bin_file:close() end
+local user_bin = os.getenv("CYBER_WARE_BIN") or configured_bin or (home .. "/.local/bin")
 
 local function command_path(command)
     if command:sub(1, 1) == "/" then
@@ -26,30 +30,71 @@ local function command_path(command)
     return nil
 end
 
-local function start_if_available(command, executable)
+local function shell_quote(value)
+    return "'" .. value:gsub("'", "'\\''") .. "'"
+end
+
+local function process_running(name)
+    local probe = io.popen("pgrep -x -- " .. shell_quote(name) .. " >/dev/null 2>&1; printf '%s' \"$?\"")
+    if not probe then return false end
+    local result = probe:read("*a")
+    probe:close()
+    return result == "0"
+end
+
+local function command_running(pattern)
+    local probe = io.popen("pgrep -f -- " .. shell_quote(pattern) .. " >/dev/null 2>&1; printf '%s' \"$?\"")
+    if not probe then return false end
+    local result = probe:read("*a")
+    probe:close()
+    return result == "0"
+end
+
+local function start_if_available(command, executable, process_name, refresh_waybar)
     local path = command_path(executable)
     if not path then return end
 
     if command:sub(1, #executable) == executable then
-        command = path .. command:sub(#executable + 1)
+        command = shell_quote(path) .. command:sub(#executable + 1)
+    end
+    if process_running(process_name or executable:match("([^/]+)$")) then
+        if refresh_waybar then
+            hl.exec_cmd("pkill -USR2 -x -- " .. shell_quote(process_name) .. " >/dev/null 2>&1 || true")
+        elseif process_name == "mako" and command_path("makoctl") then
+            hl.exec_cmd("makoctl reload >/dev/null 2>&1 || true")
+        end
+        return
     end
     hl.exec_cmd(command)
 end
 
-hl.on("hyprland.start", function()
-    start_if_available("/usr/lib/pam_kwallet_init", "/usr/lib/pam_kwallet_init")
-    start_if_available("waybar", "waybar")
-    start_if_available("mako", "mako")
-    start_if_available("env QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/hyprpolkitagent/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent")
-    start_if_available(user_bin .. "/cyber-wall --set --restore", user_bin .. "/cyber-wall")
-    start_if_available("hypridle", "hypridle")
+local last_activation = 0
+local function start_applications()
+    local now = os.time()
+    if now == last_activation then return end
+    last_activation = now
+    start_if_available("/usr/lib/pam_kwallet_init", "/usr/lib/pam_kwallet_init", "pam_kwallet_init")
+    start_if_available("waybar", "waybar", "waybar", true)
+    start_if_available("mako", "mako", "mako")
+    start_if_available("env QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/hyprpolkitagent/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent", "hyprpolkitagent")
+    start_if_available(user_bin .. "/cyber-wall --set --restore", user_bin .. "/cyber-wall", "mpvpaper")
+    local idle_config = io.open(config_home .. "/hypr/hypridle.conf", "r")
+    if idle_config then
+        idle_config:close()
+        start_if_available("hypridle", "hypridle", "hypridle")
+    end
     local wl_paste = command_path("wl-paste")
     local cliphist = command_path("cliphist")
-    if wl_paste and cliphist then
-        hl.exec_cmd(wl_paste .. " --watch " .. cliphist .. " store")
+    if wl_paste and cliphist and not command_running("[w]l-paste --watch.*cliphist.*store") then
+        hl.exec_cmd(shell_quote(wl_paste) .. " --watch " .. shell_quote(cliphist) .. " store")
     end
-    start_if_available("opendeck --hide", "opendeck")
-    start_if_available("discord", "discord")
-    start_if_available("steam", "steam")
+    start_if_available("opendeck --hide", "opendeck", "opendeck")
+    start_if_available("discord", "discord", "discord")
+    start_if_available("steam", "steam", "steam")
+end
+
+hl.on("hyprland.start", function()
+    start_applications()
     hl.dispatch(hl.dsp.focus({ workspace = "1" }))
 end)
+hl.on("config.reloaded", start_applications)

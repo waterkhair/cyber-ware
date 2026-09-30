@@ -62,6 +62,17 @@ class ConfigTests(unittest.TestCase):
             self.assertGreater(result.index("[app-name=\"cyber-signal\"]"), result.index("[urgency=normal]"))
             self.assertNotIn("include=", result)
 
+    def test_theme_can_be_saved_without_requiring_a_running_mako_daemon(self):
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.dict(os.environ, {"XDG_CONFIG_HOME": directory}), \
+             patch.object(cli, "_write_mako_styles", return_value=True), \
+             patch.object(cli.shutil, "which", return_value="/usr/bin/makoctl"), \
+             patch.object(cli.subprocess, "run") as run:
+            self.assertEqual(cli._theme("greenline", reload_mako=False), 0)
+            run.assert_not_called()
+            config = json.loads((Path(directory) / "cyber-signal/config.json").read_text())
+            self.assertEqual(config["theme"], "greenline")
+
     def test_uninstall_removes_only_managed_mako_block(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"XDG_CONFIG_HOME": directory}), \
              patch.object(cli.shutil, "which", return_value=None):

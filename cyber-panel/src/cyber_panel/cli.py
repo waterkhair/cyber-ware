@@ -118,11 +118,20 @@ def show_status(p: dict[str, Path]) -> None:
 
 
 def uninstall(p: dict[str, Path], purge: bool) -> None:
+    state_file = p["state"] / "install.json"
+    command = Path(p["prefix"] / "bin/cyber-panel")
+    if state_file.is_symlink() or p["app"].is_symlink() or p["waybar"].is_symlink() or (p["app"].exists() and not (p["app"] / ".cyber-panel-managed").is_file()):
+        raise RuntimeError("refusing to uninstall an unowned or symlinked cyber-panel installation")
     state = read_state(p)
+    command = Path(state.get("command_path", command))
+    if command.is_symlink() or (command.exists() and "# cyber-panel-managed-command" not in command.read_text(encoding="utf-8", errors="replace")):
+        raise RuntimeError(f"refusing to remove an unowned command or symlink: {command}")
     backup_dir = p["state"] / "backups"
     changed_dir = p["state"] / "before-uninstall"
     for name in MANAGED_FILES:
         target = p["waybar"] / name
+        if target.is_symlink():
+            raise RuntimeError(f"refusing to restore over a symlink: {target}")
         backup = backup_dir / name
         original_exists = bool(state.get("originals", {}).get(name, False))
         if target.exists() and digest(target) != state.get("installed_hashes", {}).get(name):
@@ -134,11 +143,22 @@ def uninstall(p: dict[str, Path], purge: bool) -> None:
         elif target.exists():
             target.unlink()
 
-    command = Path(state.get("command_path", p["prefix"] / "bin/cyber-panel"))
     command.unlink(missing_ok=True)
-    shutil.rmtree(p["app"], ignore_errors=True)
+    shutil.rmtree(p["app"] / "src/cyber_panel", ignore_errors=True)
+    shutil.rmtree(p["app"] / "themes", ignore_errors=True)
+    (p["app"] / "config.jsonc").unlink(missing_ok=True)
+    (p["app"] / ".cyber-panel-managed").unlink(missing_ok=True)
+    for directory in (p["app"] / "src", p["app"]):
+        try:
+            directory.rmdir()
+        except OSError:
+            pass
     if purge:
-        shutil.rmtree(p["config"].parent, ignore_errors=True)
+        p["config"].unlink(missing_ok=True)
+        try:
+            p["config"].parent.rmdir()
+        except OSError:
+            pass
         shutil.rmtree(p["state"], ignore_errors=True)
     print("cyber-panel was uninstalled; original Waybar files were restored when available.")
     if not purge:

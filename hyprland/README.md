@@ -69,9 +69,13 @@ Hyprland session environment if you install them elsewhere.
 Then install the desired cyber-ware components and required system programs.
 The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`, and
 `cyber-jackout`, as well as local `fuzzel-toggle` and `cliphist-fuzzel` helpers.
-The startup module also launches Waybar, Mako, Hypridle, OpenDeck, Discord, and
-Steam; remove or change those entries in `hyprland/autostart.lua` if they are
-not part of your setup. It does not install packages or create those helpers.
+The startup module also launches Waybar, Mako, OpenDeck, Discord, Steam, and
+other configured applications when present. Hypridle starts only when you
+provide `~/.config/hypr/hypridle.conf`; this repository does not ship a
+Hypridle/Hyprlock policy. `fuzzel-toggle` and `cliphist-fuzzel` are optional
+local helpers; their keybindings are omitted when they are not executable. The
+installer reports those missing optional integrations and does not create
+personal helper scripts or install packages.
 
 Check the config and reload from an active Hyprland session:
 

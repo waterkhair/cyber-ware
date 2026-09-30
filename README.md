@@ -32,9 +32,21 @@ out of the public repository. Hardware-specific settings belong in a local
 ## Install the cyber-ware setup
 
 The top-level installer always installs the modular Hyprland configuration,
-then asks whether to install each optional cyber-ware component. It does not
-use sudo or install operating-system packages; each component installer checks
-its own dependencies.
+then asks whether to install each optional cyber-ware component. It checks the
+selected components' required commands before changing the active desktop and
+does not use sudo or install operating-system packages. It requires Hyprland
+0.55 or newer for the Lua config API and checks that version before touching
+active files. A piped install resolves and records the exact Git revision
+downloaded; running `./install.sh` uses the checked-out tree.
+
+For installation in a running desktop, the installer probes that session's
+Lua API directly. A legacy `hyprland.conf` session is refused before active
+files change, even if a `hyprland.lua` file already exists on disk. Log out and
+install from a TTY, or migrate the running session to Lua first. From a TTY,
+compatibility is checked with `Hyprland --version` without requiring IPC.
+A legacy `.conf` file is preserved, but its settings are not automatically
+translated; put any required machine settings in `hyprland.local.lua` before
+starting the new configuration.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/WaterKhair/cyber-ware/main/install.sh | sh
@@ -50,10 +62,21 @@ modules into it when possible.
 Details and machine-specific setup are in [`hyprland/README.md`](hyprland/README.md).
 The shared command is installed to `~/.local/bin/cyber-ware` by default; ensure
 `~/.local/bin` is on `PATH`.
-After installing the selected components, the installer reloads Hyprland when
-run from an active session so the complete configuration (including monitor
-settings) is applied together. If no session is reachable, it prints the
-manual `hyprctl reload` command.
+After installing selected components, the installer reloads an active
+Hyprland session. Its reload handler starts missing configured services,
+refreshes existing Waybar/Mako instances, and restores a saved wallpaper
+without duplicating running processes. If run from a TTY, those actions begin
+on the next Hyprland login. The transaction stages Lua modules first and
+restores the prior config if publication or active config validation fails.
+Automatic reload is paused through the Lua API during publication, and its
+previous setting is restored. Each installation has a unique entry-point token;
+the installer checks it after reload so an unrelated `--config` file cannot
+produce a false success.
+
+The installed command directory is recorded for Hyprland and Waybar, so a
+custom `PREFIX` works for desktop actions even when the graphical session does
+not inherit that directory in `PATH`. To use commands interactively, add that
+directory to your shell path (for fish, for example: `fish_add_path ~/.local/bin`).
 
 The installer also provides one shared theme command:
 

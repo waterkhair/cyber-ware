@@ -1,4 +1,5 @@
 #!/bin/sh
+# cyber-wall-managed-command
 set -eu
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
