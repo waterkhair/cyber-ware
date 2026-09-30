@@ -41,12 +41,12 @@ By default, the command is installed in `~/.local/bin`, application code in
 `~/.config/systemd/user`. Set `PREFIX` to install the command elsewhere. The
 installer does not overwrite an existing config file.
 
-When Mako is installed, the installer adds the selected app-scoped rules in a
-clearly marked block at the end of `~/.config/mako/config`, then reloads Mako
-if it is running. It preserves your other Mako settings. Mako applies these
-rules only to notifications whose app name is `cyber-signal`; other
-applications retain their existing appearance. The rules use Mako's app-name
-criteria and normal style options. See the [Mako configuration
+When Mako is installed, the installer adds the selected theme in a clearly
+marked block at the end of `~/.config/mako/config`, then reloads Mako if it is
+running. The theme sets Mako's global defaults, so ordinary `notify-send`
+notifications use the selected cyber-ware colors too. More specific
+app-scoped rules give cyber-signal notifications distinct critical styling.
+The installer preserves settings outside its marked block. See the [Mako configuration
 manual](https://github.com/emersion/mako/blob/master/doc/mako.5.scd). If Mako
 is absent, cyber-signal still works, but its Mako theme cannot be applied until
 Mako is installed.
@@ -112,7 +112,10 @@ notifies and never installs updates.
 
 The two Mako theme source files are in `src/cyber_signal/themes/`. Switching
 with `cyber-signal --theme NAME` updates the selected theme and the managed
-Mako style block, then asks Mako to reload when `makoctl` is present.
+Mako style block, then asks Mako to reload when `makoctl` is present. This
+changes the appearance of desktop notifications generally, including those
+sent directly with `notify-send`; the cyber-signal critical rule remains
+app-specific.
 
 ## Troubleshooting
 

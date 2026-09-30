@@ -1,5 +1,14 @@
 # cyber-signal theme: synthwave
-# This app-scoped stylesheet is copied into the managed Mako rules block.
+# Desktop-wide Mako defaults: ordinary notify-send messages use the selected theme too.
+background-color=#17131f
+text-color=#e8e5f0
+border-color=#bd65ed
+border-size=2
+border-radius=10
+padding=12
+margin=8
+default-timeout=8000
+
 [app-name="cyber-signal"]
 background-color=#17131f
 text-color=#e8e5f0
