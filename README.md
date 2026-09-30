@@ -50,6 +50,10 @@ modules into it when possible.
 Details and machine-specific setup are in [`hyprland/README.md`](hyprland/README.md).
 The shared command is installed to `~/.local/bin/cyber-ware` by default; ensure
 `~/.local/bin` is on `PATH`.
+After installing the selected components, the installer reloads Hyprland when
+run from an active session so the complete configuration (including monitor
+settings) is applied together. If no session is reachable, it prints the
+manual `hyprctl reload` command.
 
 The installer also provides one shared theme command:
 

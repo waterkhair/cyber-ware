@@ -10,9 +10,20 @@ local function local_command_available(name)
     file:close()
     return true
 end
-local function system_command_available(name)
-    local ok, _, code = os.execute("command -v " .. name .. " >/dev/null 2>&1")
-    return ok == true or ok == 0 or code == 0
+local function system_command_path(name)
+    -- Avoid shelling out during config parsing: Hyprland's embedded Lua may
+    -- not inherit the same shell environment as a terminal. Resolve against
+    -- PATH directly and return an absolute path for exec_cmd as well.
+    local search_path = (os.getenv("PATH") or "") .. ":/usr/local/bin:/usr/bin:/bin"
+    for directory in search_path:gmatch("[^:]+") do
+        local candidate = directory .. "/" .. name
+        local file = io.open(candidate, "rb")
+        if file then
+            file:close()
+            return candidate
+        end
+    end
+    return nil
 end
 local function bind_local_command(modifiers, key, name, args, description)
     if local_command_available(name) then
@@ -21,15 +32,17 @@ local function bind_local_command(modifiers, key, name, args, description)
 end
 
 -- Requires the matching cyber-ware components and local helper commands.
-if system_command_available("ghostty") then
-    hl.bind(navMod .. " + T", hl.dsp.exec_cmd("ghostty"), { description = "Open Ghostty" })
+local ghostty = system_command_path("ghostty")
+if ghostty then
+    hl.bind(navMod .. " + T", hl.dsp.exec_cmd(ghostty), { description = "Open Ghostty" })
 end
 bind_local_command(navMod, "B", "cyber-console", "bluetui", "Toggle floating Bluetui")
 bind_local_command(navMod, "V", "cyber-console", "wiremix", "Toggle floating Wiremix")
 bind_local_command(navMod, "O", "cyber-console", "btop", "Toggle floating btop")
 bind_local_command(moveMod, "W", "cyber-wall", nil, "Toggle wallpaper picker")
-if system_command_available("zen-browser") then
-    hl.bind(navMod .. " + Z", hl.dsp.exec_cmd("zen-browser"), { description = "Open Zen Browser" })
+local zen_browser = system_command_path("zen-browser")
+if zen_browser then
+    hl.bind(navMod .. " + Z", hl.dsp.exec_cmd(zen_browser), { description = "Open Zen Browser" })
 end
 bind_local_command(navMod, "I", "cyber-console", "impala", "Toggle floating Impala")
 bind_local_command(navMod, "Y", "cyber-console", "yazi", "Toggle floating Yazi")
@@ -49,7 +62,7 @@ hl.bind(moveMod .. " + S", hl.dsp.window.move({ workspace = "4" }), { descriptio
 bind_local_command("SUPER", "Space", "fuzzel-toggle", nil, "Toggle application launcher")
 bind_local_command("SUPER", "V", "cliphist-fuzzel", nil, "Open clipboard history")
 bind_local_command(moveMod, "P", "cyber-scan", nil, "Capture and annotate a region")
-if system_command_available("wlogout") then
+if system_command_path("wlogout") then
     hl.bind(moveMod .. " + BackSpace", hl.dsp.exec_cmd("sh -c 'pgrep -x wlogout >/dev/null || exec wlogout --protocol layer-shell --buttons-per-row 5 --margin-left 220 --margin-right 220 --margin-top 600 --margin-bottom 600 --column-spacing 16 --row-spacing 0 --show-binds'"), { description = "Open power menu" })
 end
 hl.bind(navMod .. " + X", hl.dsp.window.close(), { description = "Close active window" })

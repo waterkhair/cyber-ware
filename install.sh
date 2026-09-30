@@ -220,7 +220,15 @@ for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-jackout
 done
 
 printf '%s\n' 'The config detects installed optional commands when Hyprland loads.'
-printf '%s\n' 'Reload from Hyprland with: hyprctl reload'
+if command -v hyprctl >/dev/null 2>&1; then
+    if hyprctl reload; then
+        printf '%s\n' 'Hyprland reloaded after installation.'
+    else
+        printf '%s\n' 'Hyprland is not reachable from this shell; after logging in, run: hyprctl reload' >&2
+    fi
+else
+    printf '%s\n' 'hyprctl is unavailable; after logging in, run: hyprctl reload' >&2
+fi
 printf '%s\n' 'System packages are not installed by this script; each component checks its own requirements.'
 if [ -n "$failures" ]; then
     printf 'These component installs failed:%s\n' "$failures" >&2
