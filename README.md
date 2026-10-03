@@ -22,6 +22,8 @@ components they want.
   wlogout themes.
 - [`cyber-scan/`](cyber-scan/README.md) — Wayland region screenshots through
   grim, slurp, and swappy.
+- [`cyber-deck/`](cyber-deck/README.md) — themed Fuzzel application launcher
+  with a Super+Space toggle command.
 - [`hyprland/`](hyprland/README.md) — modular Lua configuration and setup
   guidance for integrating the cyber-ware components.
 
@@ -89,9 +91,9 @@ cyber-ware --theme synthwave       # switch the desktop to synthwave
 The shared theme is saved in `~/.config/cyber-ware/theme` (or under
 `$XDG_CONFIG_HOME`). Hyprland reads it for active/inactive window and group
 borders. The command also updates installed `cyber-wall`, `cyber-signal`,
-`cyber-panel`, and `cyber-jackout`, then reloads Hyprland. Missing components
-are skipped; components installed later inherit the saved theme. `synthwave`
-is the default when no shared selection exists.
+`cyber-panel`, `cyber-jackout`, and `cyber-deck`, then reloads Hyprland.
+Missing components are skipped; components installed later inherit the saved
+theme. `synthwave` is the default when no shared selection exists.
 
 To remove only the umbrella Hyprland config and `cyber-ware` command:
 
@@ -126,6 +128,11 @@ themes. Its standalone install, dependency, and recovery details are in the
 Ghostty TUI windows. Its installer leaves compositor bindings and window rules
 to the user; integration examples are in the
 [`cyber-console` README](cyber-console/README.md).
+
+`cyber-deck` toggles the Fuzzel application launcher and provides synthwave and
+greenline themes. Its standalone installer does not edit Hyprland bindings;
+the bundled cyber-ware configuration binds Super+Space when the component is
+installed.
 
 ## Repository setup
 

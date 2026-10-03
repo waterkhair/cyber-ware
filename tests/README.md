@@ -7,7 +7,7 @@ sh tests/test_autostart.sh
 sh tests/test_install_transaction.sh
 sh tests/test_stream_bootstrap.sh
 sh tests/test_jackout_layout.sh
-for component in cyber-wall cyber-signal cyber-console cyber-panel; do
+for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-deck; do
     PYTHONPATH="$component/src" python3 -m unittest discover -s "$component/tests"
 done
 ```

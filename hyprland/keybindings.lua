@@ -73,7 +73,7 @@ hl.bind(moveMod .. " + M", hl.dsp.window.move({ workspace = "5" }), { descriptio
 hl.bind(moveMod .. " + C", hl.dsp.window.move({ workspace = "special:Comms" }), { description = "Move window to Comms" })
 hl.bind(moveMod .. " + G", hl.dsp.window.move({ workspace = "special:Games" }), { description = "Move window to Games" })
 hl.bind(moveMod .. " + S", hl.dsp.window.move({ workspace = "4" }), { description = "Move window to Streaming" })
-bind_local_command("SUPER", "Space", "fuzzel-toggle", nil, "Toggle application launcher")
+bind_local_command("SUPER", "Space", "cyber-deck", nil, "Toggle application launcher")
 bind_local_command("SUPER", "V", "cliphist-fuzzel", nil, "Open clipboard history")
 bind_local_command(moveMod, "P", "cyber-scan", nil, "Capture and annotate a region")
 if system_command_path("wlogout") then

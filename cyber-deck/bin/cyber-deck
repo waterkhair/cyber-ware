@@ -1,0 +1,8 @@
+#!/bin/sh
+# cyber-deck-managed-command
+set -eu
+
+app_home=${CYBER_DECK_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/cyber-deck}
+export CYBER_DECK_HOME="$app_home"
+export PYTHONPATH="$app_home/src${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m cyber_deck.cli "$@"

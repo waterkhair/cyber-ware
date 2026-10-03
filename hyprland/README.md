@@ -67,15 +67,16 @@ Component commands default to `~/.local/bin`; set `CYBER_WARE_BIN` in the
 Hyprland session environment if you install them elsewhere.
 
 Then install the desired cyber-ware components and required system programs.
-The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`, and
-`cyber-jackout`, as well as local `fuzzel-toggle` and `cliphist-fuzzel` helpers.
+The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`,
+`cyber-jackout`, and `cyber-deck`, as well as the optional local
+`cliphist-fuzzel` helper.
 The startup module also launches Waybar, Mako, OpenDeck, Discord, Steam, and
 other configured applications when present. Hypridle starts only when you
 provide `~/.config/hypr/hypridle.conf`; this repository does not ship a
-Hypridle/Hyprlock policy. `fuzzel-toggle` and `cliphist-fuzzel` are optional
-local helpers; their keybindings are omitted when they are not executable. The
-installer reports those missing optional integrations and does not create
-personal helper scripts or install packages.
+Hypridle/Hyprlock policy. The `cliphist-fuzzel` integration remains a local
+optional helper; its binding is omitted when it is not executable. The
+installer reports missing optional integrations and does not install system
+packages.
 
 Check the config and reload from an active Hyprland session:
 
