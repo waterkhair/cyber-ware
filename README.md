@@ -133,6 +133,13 @@ to the user; integration examples are in the
 greenline themes. Its standalone installer does not edit Hyprland bindings;
 the bundled cyber-ware configuration binds Super+Space when the component is
 installed.
+Optional clipboard history can be enabled with `cyber-deck --clipboard enable`;
+this adds Super+V and starts collection only while enabled.
+
+`cyber-jackout --enable-idle` optionally installs the themed Hyprlock and
+Hypridle configuration: lock after five minutes, turn displays off after ten,
+and lock before suspend. Existing Hyprland lock/idle configs are preserved.
+Remove the managed integration with `cyber-jackout --disable-idle`.
 
 ## Repository setup
 

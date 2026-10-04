@@ -9,6 +9,8 @@ theme_config="$config_home/cyber-jackout/theme"
 state_dir="$state_home/cyber-jackout"
 wlogout_style="$config_home/wlogout/style.css"
 wlogout_layout="$config_home/wlogout/layout"
+hypridle_config="$config_home/hypr/hypridle.conf"
+hyprlock_config="$config_home/hypr/hyprlock.conf"
 
 atomic_copy() {
     local source=$1 destination=$2 temporary
@@ -70,7 +72,96 @@ apply_theme() {
     printf '%s\n' "$name" > "$theme_config"
     chmod 600 "$theme_config"
     file_hash "$wlogout_style" > "$state_dir/style.sha256"
+    update_idle_theme "$name"
     printf 'Theme set to %s. It will appear the next time wlogout opens.\n' "$name"
+}
+
+update_idle_theme() {
+    local name=$1 expected current source
+    [[ -f "$state_dir/idle-enabled" ]] || return 0
+    [[ -f "$state_dir/hyprlock.sha256" && -f "$hyprlock_config" ]] || return 0
+    expected=$(<"$state_dir/hyprlock.sha256")
+    current=$(file_hash "$hyprlock_config")
+    if [[ "$current" != "$expected" ]]; then
+        printf '%s\n' 'Kept your edited hyprlock.conf; its lock-screen colors were not changed.' >&2
+        return 0
+    fi
+    source="$app_dir/idle/hyprlock-$name.conf"
+    [[ -f "$source" ]] || { printf 'Lock theme is missing: %s\n' "$source" >&2; return 1; }
+    atomic_copy "$source" "$hyprlock_config"
+    file_hash "$hyprlock_config" > "$state_dir/hyprlock.sha256"
+}
+
+enable_idle() {
+    local command
+    [[ -f "$state_dir/installed" ]] || { printf '%s\n' 'Install cyber-jackout first.' >&2; return 1; }
+    for command in hypridle hyprlock hyprctl loginctl sha256sum; do
+        command -v "$command" >/dev/null 2>&1 || { printf 'Missing idle integration requirement: %s\n' "$command" >&2; return 1; }
+    done
+    if [[ -f "$state_dir/idle-enabled" ]]; then
+        printf '%s\n' 'cyber-jackout idle/lock integration is already installed.'
+        if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && ! pgrep -x hypridle >/dev/null 2>&1; then
+            hyprctl reload >/dev/null || { printf '%s\n' 'Run hyprctl reload to start Hypridle.' >&2; return 1; }
+            for _ in {1..20}; do
+                pgrep -x hypridle >/dev/null 2>&1 && break
+                sleep 0.1
+            done
+            pgrep -x hypridle >/dev/null 2>&1 || { printf '%s\n' 'Hypridle did not start; check the user journal.' >&2; return 1; }
+            printf '%s\n' 'Hypridle is running.'
+        fi
+        return 0
+    fi
+    [[ ! -L "$config_home/hypr" ]] || { printf 'Refusing symlinked Hyprland config directory: %s\n' "$config_home/hypr" >&2; return 1; }
+    for target in "$hypridle_config" "$hyprlock_config"; do
+        [[ ! -L "$target" && ! -e "$target" ]] || { printf 'Keeping existing user config; cannot install optional idle integration over %s\n' "$target" >&2; return 1; }
+    done
+    mkdir -p -- "$config_home/hypr" "$state_dir"
+    atomic_copy "$app_dir/idle/hypridle.conf" "$hypridle_config"
+    if ! atomic_copy "$app_dir/idle/hyprlock-$(current_theme).conf" "$hyprlock_config"; then
+        rm -f -- "$hypridle_config"
+        return 1
+    fi
+    file_hash "$hypridle_config" > "$state_dir/hypridle.sha256"
+    file_hash "$hyprlock_config" > "$state_dir/hyprlock.sha256"
+    : > "$state_dir/idle-enabled"
+    printf '%s\n' 'Installed optional lock/idle configs: lock at 5 minutes, screen off at 10, lock before suspend.'
+    if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+        hyprctl reload >/dev/null || { printf '%s\n' 'Configs are installed, but Hyprland reload failed; run hyprctl reload manually.' >&2; return 1; }
+        for _ in {1..20}; do
+            pgrep -x hypridle >/dev/null 2>&1 && break
+            sleep 0.1
+        done
+        pgrep -x hypridle >/dev/null 2>&1 || { printf '%s\n' 'Configs are installed, but Hypridle did not start; check hyprctl configerrors and the user journal.' >&2; return 1; }
+        printf '%s\n' 'Hypridle is running. Verify idle locking and display-off behavior after saving work.'
+    else
+        printf '%s\n' 'Hypridle will start at the next Hyprland login.'
+    fi
+}
+
+validate_idle_removal() {
+    local current expected pair target hash_file
+    [[ -f "$state_dir/idle-enabled" ]] || return 0
+    for pair in "hypridle:$hypridle_config" "hyprlock:$hyprlock_config"; do
+        target=${pair#*:}
+        hash_file="$state_dir/${pair%%:*}.sha256"
+        [[ -f "$hash_file" && -f "$target" ]] || { printf 'Missing managed idle config metadata for %s; refusing removal.\n' "$target" >&2; return 1; }
+        expected=$(<"$hash_file")
+        current=$(file_hash "$target")
+        [[ "$current" == "$expected" ]] || { printf 'Your edited config was left untouched: %s\n' "$target" >&2; return 1; }
+    done
+}
+
+disable_idle() {
+    [[ -f "$state_dir/idle-enabled" ]] || { printf '%s\n' 'cyber-jackout idle/lock integration is not installed.'; return 0; }
+    validate_idle_removal || return 1
+    rm -- "$hypridle_config" "$hyprlock_config"
+    rm -- "$state_dir/hypridle.sha256" "$state_dir/hyprlock.sha256" "$state_dir/idle-enabled"
+    if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active --quiet hypridle.service 2>/dev/null; then
+        systemctl --user stop hypridle.service
+    else
+        pkill -x hypridle 2>/dev/null || true
+    fi
+    printf '%s\n' 'Removed cyber-jackout idle/lock configs and stopped Hypridle.'
 }
 
 usage() {
@@ -78,6 +169,8 @@ usage() {
 Usage: cyber-jackout [logout|reboot|poweroff]
        cyber-jackout --theme [synthwave|greenline]
        cyber-jackout --check
+       cyber-jackout --enable-idle
+       cyber-jackout --disable-idle
        cyber-jackout --uninstall [--purge]
 
 Safely exit the current Hyprland session, reboot, or power off.
@@ -104,6 +197,11 @@ check_requirements() {
     else
         printf '%s\n' 'Optional integration missing: cyber-wall (wallpaper recovery will be unavailable if an action fails).'
     fi
+    if [[ -f "$state_dir/idle-enabled" ]]; then
+        printf '%s\n' 'Optional lock/idle integration is installed (300-second lock, 600-second display-off).'
+    else
+        printf '%s\n' 'Optional lock/idle integration is not installed; use cyber-jackout --enable-idle to install it.'
+    fi
 }
 
 uninstall() {
@@ -121,6 +219,11 @@ uninstall() {
     if [[ $(readlink -f -- "$command_path" 2>/dev/null || true) != "$installed_app_dir/bin/cyber-jackout" ]]; then
         printf 'Refusing to remove an unexpected command at %s.\n' "$command_path" >&2
         return 1
+    fi
+    # Check optional idle files before restoring or removing any power-menu
+    # files, so an edited config cannot leave uninstall half applied.
+    if [[ -f "$state_dir/idle-enabled" ]]; then
+        validate_idle_removal || return 1
     fi
     if [[ ! -f "$state_dir/original-style-existed" ]]; then
         printf '%s\n' 'Refusing to uninstall: original stylesheet recovery metadata is missing.' >&2
@@ -177,6 +280,9 @@ uninstall() {
             rm -f -- "$wlogout_layout"
         fi
     fi
+    if [[ -f "$state_dir/idle-enabled" ]]; then
+        disable_idle
+    fi
     rm -- "$command_path"
     rm -rf -- "$installed_app_dir"
     rm -f -- "$state_dir/installed"
@@ -206,6 +312,16 @@ case "$action" in
     --check)
         ((${#args[@]} == 1)) || { usage >&2; exit 2; }
         check_requirements
+        exit
+        ;;
+    --enable-idle)
+        ((${#args[@]} == 1)) || { usage >&2; exit 2; }
+        enable_idle
+        exit
+        ;;
+    --disable-idle)
+        ((${#args[@]} == 1)) || { usage >&2; exit 2; }
+        disable_idle
         exit
         ;;
     --theme)

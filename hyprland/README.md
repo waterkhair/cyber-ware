@@ -49,7 +49,7 @@ config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 mkdir -p "$config_home/hypr/hyprland"
 cp hyprland/hyprland.lua "$config_home/hypr/hyprland.lua"
 cp hyprland/appearance.lua hyprland/windows.lua \
-   hyprland/autostart.lua hyprland/keybindings.lua \
+   hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh \
    "$config_home/hypr/hyprland/"
 ```
 
@@ -68,15 +68,21 @@ Hyprland session environment if you install them elsewhere.
 
 Then install the desired cyber-ware components and required system programs.
 The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`,
-`cyber-jackout`, and `cyber-deck`, as well as the optional local
-`cliphist-fuzzel` helper.
+`cyber-jackout`, and `cyber-deck`. Super+V is registered when cyber-deck's
+optional clipboard history feature is enabled.
 The startup module also launches Waybar, Mako, OpenDeck, Discord, Steam, and
-other configured applications when present. Hypridle starts only when you
-provide `~/.config/hypr/hypridle.conf`; this repository does not ship a
-Hypridle/Hyprlock policy. The `cliphist-fuzzel` integration remains a local
-optional helper; its binding is omitted when it is not executable. The
-installer reports missing optional integrations and does not install system
-packages.
+other configured applications when present. The optional cyber-jackout
+lock/idle integration installs a matching Hyprlock theme and a 5-minute lock,
+10-minute display-off, and lock-before-suspend policy. The startup event
+queues `session-start.sh` outside the compositor event loop. It waits for the
+display and compositor to respond, imports the D-Bus/systemd environment,
+clears failed-service limits, starts the Hyprland and GTK portal backends, and
+checks the capture backend before refreshing the portal frontend. It requires
+`xdg-desktop-portal`, `xdg-desktop-portal-hyprland`, and `xdg-desktop-portal-gtk`.
+OpenDeck, Discord, and Steam are checked and launched after recovery succeeds.
+This happens once per Hyprland session; config reloads do not restart portals or
+relaunch user applications. The installer reports missing optional
+integrations and does not install system packages.
 
 Check the config and reload from an active Hyprland session:
 
@@ -92,6 +98,7 @@ hyprctl configerrors
 - `appearance.lua` — gaps, borders, groups, animations, input defaults
 - `windows.lua` — app rules and workspace behavior
 - `autostart.lua` — session process startup
+- `session-start.sh` — asynchronous portal readiness/recovery and login apps
 - `keybindings.lua` — keyboard and mouse bindings
 - `machine.example.lua` — optional per-machine GPU and monitor settings
 

@@ -2,7 +2,7 @@ local home = os.getenv("TEST_HOME")
 local repo = os.getenv("TEST_REPO")
 local config = home .. "/.config"
 local bin = home .. "/.local/bin"
-local names = { "waybar", "mako", "makoctl", "cyber-wall", "wl-paste", "cliphist", "opendeck", "discord", "steam" }
+local names = { "waybar", "mako", "makoctl", "cyber-wall", "cyber-deck", "wl-paste", "cliphist", "opendeck", "discord", "steam" }
 local available = {}
 for _, name in ipairs(names) do available[bin .. "/" .. name] = true end
 local running = { waybar = true, mako = true }
@@ -21,9 +21,13 @@ os.getenv = function(name)
     return nil
 end
 os.time = function() return time end
+os.execute = function() error("autostart must not synchronously wait for portal services") end
 io.open = function(path)
     if path == config .. "/cyber-ware/bin-path" then
         return { read = function() return bin end, close = function() end }
+    end
+    if path == config .. "/cyber-deck/config.json" then
+        return { read = function() return '{"clipboard_enabled": true}' end, close = function() end }
     end
     if path == config .. "/hypr/hypridle.conf" then return nil end
     if available[path] then return { close = function() end } end
@@ -42,9 +46,10 @@ hl = {
     on = function(event, callback) handlers[event] = callback end,
     exec_cmd = function(command)
         commands[#commands + 1] = command
-        for _, name in ipairs({ "mpvpaper", "opendeck", "discord", "steam" }) do
+        for _, name in ipairs({ "mpvpaper", "opendeck", "steam" }) do
             if command:find(name, 1, true) then running[name] = true end
         end
+        if command:find("discord", 1, true) then running.Discord = true end
         if command:find("/cyber-wall", 1, true) then running.mpvpaper = true end
         if command:find("wl-paste", 1, true) then watcher = true end
     end,
@@ -56,6 +61,9 @@ dofile(os.getenv("TEST_REPO") .. "/hyprland/autostart.lua")
 assert(handlers["hyprland.start"], "startup handler registered")
 assert(handlers["config.reloaded"], "reload handler registered")
 handlers["hyprland.start"]()
+running.opendeck = false
+running.Discord = false
+running.steam = false
 handlers["config.reloaded"]()
 time = time + 3
 handlers["config.reloaded"]()
@@ -69,11 +77,9 @@ if count("/cyber-wall' --set --restore") ~= 1 then
     for _, command in ipairs(commands) do io.stderr:write(command, "\n") end
 end
 assert(count("/cyber-wall' --set --restore") == 1, "saved wallpaper is restored once")
-assert(count("/opendeck' --hide") == 1, "OpenDeck is not duplicated on reload")
-assert(count("/discord") == 1, "Discord is not duplicated on reload")
-assert(count("/steam") == 1, "Steam is not duplicated on reload")
+assert(count("session-start.sh") == 1, "login helper is queued once, never on reload")
 assert(count("wl-paste' --watch") == 1, "clipboard watcher is not duplicated")
-assert(count("pkill -USR2") == 2, "running Waybar refreshes on each activation")
-assert(count("makoctl reload") == 2, "running Mako refreshes on each activation")
+assert(count("pkill -USR2") == 3, "running Waybar refreshes on startup and each config reload")
+assert(count("makoctl reload") == 3, "running Mako refreshes on startup and each config reload")
 assert(dispatches == 1, "workspace focus only happens at session startup")
 print("PASS: reload activation restores wallpaper, refreshes managed services, and avoids duplicate processes.")

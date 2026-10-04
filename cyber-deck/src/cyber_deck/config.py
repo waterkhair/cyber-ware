@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import json
+import stat
 import tempfile
 from pathlib import Path
 
@@ -46,6 +48,45 @@ def set_theme(theme: str) -> None:
             temporary = Path(stream.name)
             stream.write(theme + "\n")
         temporary.chmod(0o600)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def clipboard_is_enabled() -> bool:
+    path = config_dir() / "config.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return False
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Cannot read clipboard settings at {path}: {error}") from error
+    return isinstance(data, dict) and data.get("clipboard_enabled") is True
+
+
+def set_clipboard_enabled(enabled: bool) -> None:
+    path = config_dir() / "config.json"
+    if config_dir().is_symlink() or path.is_symlink():
+        raise RuntimeError(f"Refusing a symlinked clipboard settings path: {path}")
+    if path.exists() and not path.is_file():
+        raise RuntimeError(f"Clipboard settings path is not a regular file: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Cannot read clipboard settings at {path}: {error}") from error
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Expected a JSON object in {path}")
+    data["clipboard_enabled"] = enabled
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix="config.", suffix=".tmp", delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(data, stream, indent=2)
+            stream.write("\n")
+        temporary.chmod(stat.S_IRUSR | stat.S_IWUSR)
         os.replace(temporary, path)
     finally:
         if temporary is not None:

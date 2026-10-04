@@ -64,9 +64,21 @@ original in `~/.local/state/cyber-jackout/backups/` for uninstall recovery.
 It also installs a managed `~/.config/wlogout/layout`. Before first
 replacement, an existing layout is copied to cyber-jackout's recovery state.
 Logout, reboot, and shutdown invoke the installed cyber-jackout command so its
-cleanup sequence runs. Lock uses `hyprlock` when present, otherwise
+cleanup sequence runs. Lock uses `hyprlock --grace 0` when present, otherwise
 `loginctl lock-session`; suspend uses `systemctl suspend`. If you edit the
 managed layout later, upgrades and uninstall preserve the edited file.
+
+Hyprlock and Hypridle configuration are optional and are not written by the
+normal installer. Enable the bundled cyberpunk lock screen and idle policy
+explicitly with `cyber-jackout --enable-idle`. It locks after 5 minutes, turns
+the display off after 10 minutes, and requests a lock before suspend. The lock
+screen uses a solid background independent of cyber-wall. Existing
+`~/.config/hypr/hypridle.conf` or `hyprlock.conf` files are never overwritten;
+the optional command refuses to install if either already exists. The generated
+files are hash-tracked, and theme changes update only an unedited managed lock
+config. Use `cyber-jackout --disable-idle` to remove the unchanged generated
+files and stop Hypridle. If you edit either generated file, disable/uninstall
+will leave it intact and report that it must be handled manually.
 
 ## Usage
 
@@ -76,6 +88,8 @@ cyber-jackout logout       # cleanly log out
 cyber-jackout reboot       # clean up, request reboot, then exit Hyprland
 cyber-jackout poweroff     # clean up, request shutdown, then exit Hyprland
 cyber-jackout --check      # check runtime commands and optional cyber-wall
+cyber-jackout --enable-idle # opt in to lock after 5 minutes / display off at 10
+cyber-jackout --disable-idle # remove unchanged managed idle/lock configuration
 cyber-jackout --theme      # show the selected theme
 cyber-jackout --theme greenline
 cyber-jackout --theme synthwave

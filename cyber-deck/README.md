@@ -1,15 +1,16 @@
 # cyber-deck
 
 `cyber-deck` toggles the Fuzzel application launcher for Hyprland. It provides
-two Fuzzel themes, `synthwave` and `greenline`, and works as a standalone
-cyber-ware component. It does not edit compositor configuration or install
-system packages.
+two Fuzzel themes, `synthwave` and `greenline`, and an optional themed
+clipboard history picker backed by cliphist. It works as a standalone
+cyber-ware component and does not install system packages.
 
 ## Requirements
 
 - Fuzzel
 - Python 3
 - A Wayland session with Fuzzel's required layer-shell support
+- Optional clipboard history: `cliphist`, `wl-copy`, and `wl-paste`
 
 Install Fuzzel with your distribution's package manager before installing
 cyber-deck.
@@ -52,6 +53,9 @@ requires the cyber-ware repository to be public and have a commit on `main`.
 
 ```sh
 cyber-deck                         # toggle the app launcher
+cyber-deck --clipboard             # pick saved clipboard text or image
+cyber-deck --clipboard enable      # enable clipboard history collection
+cyber-deck --clipboard disable     # disable clipboard history collection
 cyber-deck --theme                 # show the selected theme
 cyber-deck --theme greenline       # switch to greenline
 cyber-deck --theme synthwave       # switch to synthwave
@@ -64,6 +68,12 @@ The theme takes effect the next time the launcher opens. Edit either INI file
 under `~/.config/cyber-deck/themes` to customize its Fuzzel settings. The
 component checks for its own Fuzzel window before toggling it, so unrelated
 Fuzzel menus remain open.
+
+Clipboard history is disabled by default. After enabling it, run
+`hyprctl reload`: cyber-ware then starts the `wl-paste` watcher and registers
+Super+V. Disabling it stops only the matching cliphist watcher; reload removes
+the binding. The picker passes the selected row to `cliphist decode` through
+standard input, never through a shell, and restores image MIME types.
 
 ## Hyprland integration
 
@@ -97,10 +107,10 @@ only when no local selection exists.
 
 ## Uninstall
 
-`cyber-deck --uninstall` removes its command and program files, keeping the
-selected theme and editable theme files. Add `--purge` to remove those settings
-after typing `cyber-deck` to confirm. It does not alter Hyprland configuration
-or uninstall Fuzzel.
+`cyber-deck --uninstall` removes its command and program files, disables
+clipboard collection, and keeps the selected theme and editable theme files.
+Add `--purge` to remove those settings after typing `cyber-deck` to confirm. It
+does not alter Hyprland configuration or uninstall Fuzzel.
 The installation manifest records the command path, so uninstall also works
 for a custom `PREFIX` without exporting it again. Keep any custom
 `XDG_CONFIG_HOME` in your session environment when accessing its configuration.

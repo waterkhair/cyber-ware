@@ -2,9 +2,9 @@
 
 `cyber-signal` is a lightweight, user-level notification helper for Linux. It
 can report NetworkManager connectivity changes, available Arch updates, and
-low disk space. Notifications are delivered through `notify-send`; optional
-Mako rules give only cyber-signal messages a consistent `synthwave` or
-`greenline` appearance.
+low disk space. Notifications are delivered through `notify-send`; the
+selected `synthwave` or `greenline` theme sets Mako's desktop-wide defaults,
+while cyber-signal notifications receive matching app-specific emphasis.
 
 It does not need root, install packages, edit your Mako/Hyprland configuration,
 or monitor continuously except for the small network state watcher when

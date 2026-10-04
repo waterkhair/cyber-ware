@@ -42,7 +42,7 @@ if [ -L "$command_path" ] || { [ -e "$command_path" ] && { [ ! -f "$command_path
     exit 1
 fi
 for target in "$config_dir/theme" "$config_dir/themes" "$config_dir/themes/synthwave.ini" "$config_dir/themes/greenline.ini"; do
-    if [ -L "$target" ] || { [ -e "$target" ] && { [ ! -f "$target" ] && [ "$target" != "$config_dir/themes"; }; }; then
+    if [ -L "$target" ] || { [ -e "$target" ] && [ ! -f "$target" ] && [ "$target" != "$config_dir/themes" ]; }; then
         printf 'Refusing an unsafe configuration destination: %s\n' "$target" >&2
         exit 1
     fi
@@ -65,5 +65,5 @@ if [ -z "$project_dir" ] || [ ! -f "$project_dir/src/cyber_deck/cli.py" ]; then
     [ -f "$project_dir/src/cyber_deck/cli.py" ] || { printf '%s\n' 'The cyber-deck component was not found in the cyber-ware archive.' >&2; exit 1; }
 fi
 
-PYTHONPATH="$project_dir/src" CYBER_DECK_HOME="$app_dir" python3 -m cyber_deck.installer "$project_dir"
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$project_dir/src" CYBER_DECK_HOME="$app_dir" python3 -m cyber_deck.installer "$project_dir"
 if [ -n "${revision:-}" ]; then printf 'Source revision: %s\n' "$revision"; fi

@@ -174,7 +174,7 @@ fi
 if [ "$layout_can_install" = yes ]; then
     escape_sed() { printf '%s' "$1" | sed 's/[\\&#|]/\\&/g'; }
     jackout_escaped=$(escape_sed "$command_path")
-    if command -v hyprlock >/dev/null 2>&1; then lock_action=hyprlock; else lock_action='loginctl lock-session'; fi
+    if command -v hyprlock >/dev/null 2>&1; then lock_action='hyprlock --grace 0'; else lock_action='loginctl lock-session'; fi
     lock_escaped=$(escape_sed "$lock_action")
     layout_tmp=$(mktemp "$wlogout_dir/.layout.cyber-jackout.XXXXXX")
     sed "s|@JACKOUT@|$jackout_escaped|g; s|@LOCK_ACTION@|$lock_escaped|g" "$app_dir/layout" > "$layout_tmp"
@@ -191,4 +191,4 @@ printf 'Installed cyber-jackout in %s\n' "$app_dir"
 printf 'Command: %s\n' "$command_path"
 printf 'wlogout theme: %s (switch with cyber-jackout --theme synthwave|greenline)\n' "$theme"
 printf '%s\n' 'Run cyber-jackout --check to verify requirements.'
-printf '%s\n' 'The managed wlogout layout routes logout, reboot, and shutdown through cyber-jackout; lock uses hyprlock when installed (otherwise loginctl), and suspend uses systemctl.'
+printf '%s\n' 'The managed wlogout layout routes logout, reboot, and shutdown through cyber-jackout; lock uses hyprlock --grace 0 when installed (otherwise loginctl), and suspend uses systemctl.'

@@ -102,7 +102,7 @@ uninstall() {
         [ ! -f "$backup_dir/hyprland.lua" ] || cp -a -- "$backup_dir/hyprland.lua" "$main_config"
     else
         rm -f -- "$main_config" "$module_dir/appearance.lua" "$module_dir/windows.lua" \
-            "$module_dir/autostart.lua" "$module_dir/keybindings.lua"
+            "$module_dir/autostart.lua" "$module_dir/keybindings.lua" "$module_dir/session-start.sh"
         rmdir "$module_dir" 2>/dev/null || true
     fi
     if [ "$created_local" = yes ] && [ -f "$local_config" ] && [ "$generated_local_hash" = unknown ]; then

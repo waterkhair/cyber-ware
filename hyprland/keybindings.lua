@@ -74,7 +74,14 @@ hl.bind(moveMod .. " + C", hl.dsp.window.move({ workspace = "special:Comms" }), 
 hl.bind(moveMod .. " + G", hl.dsp.window.move({ workspace = "special:Games" }), { description = "Move window to Games" })
 hl.bind(moveMod .. " + S", hl.dsp.window.move({ workspace = "4" }), { description = "Move window to Streaming" })
 bind_local_command("SUPER", "Space", "cyber-deck", nil, "Toggle application launcher")
-bind_local_command("SUPER", "V", "cliphist-fuzzel", nil, "Open clipboard history")
+local deck_config_file = io.open(config_home .. "/cyber-deck/config.json", "r")
+if deck_config_file then
+    local deck_config = deck_config_file:read("*a")
+    deck_config_file:close()
+    if deck_config:match('"clipboard_enabled"%s*:%s*true') then
+        bind_local_command("SUPER", "V", "cyber-deck", "--clipboard", "Open clipboard history")
+    end
+end
 bind_local_command(moveMod, "P", "cyber-scan", nil, "Capture and annotate a region")
 if system_command_path("wlogout") then
     hl.bind(moveMod .. " + BackSpace", hl.dsp.exec_cmd("sh -c 'pgrep -x wlogout >/dev/null || exec wlogout --protocol layer-shell --buttons-per-row 5 --margin-left 220 --margin-right 220 --margin-top 600 --margin-bottom 600 --column-spacing 16 --row-spacing 0 --show-binds'"), { description = "Open power menu" })

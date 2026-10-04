@@ -68,11 +68,7 @@ local function start_if_available(command, executable, process_name, refresh_way
     hl.exec_cmd(command)
 end
 
-local last_activation = 0
-local function start_applications()
-    local now = os.time()
-    if now == last_activation then return end
-    last_activation = now
+local function refresh_session_services()
     start_if_available("/usr/lib/pam_kwallet_init", "/usr/lib/pam_kwallet_init", "pam_kwallet_init")
     start_if_available("waybar", "waybar", "waybar", true)
     start_if_available("mako", "mako", "mako")
@@ -83,18 +79,28 @@ local function start_applications()
         idle_config:close()
         start_if_available("hypridle", "hypridle", "hypridle")
     end
+    local deck_config = io.open(config_home .. "/cyber-deck/config.json", "r")
+    local clipboard_enabled = false
+    local deck_command = io.open(user_bin .. "/cyber-deck", "rb")
+    local deck_installed = deck_command ~= nil
+    if deck_command then deck_command:close() end
+    if deck_config then
+        local contents = deck_config:read("*a")
+        deck_config:close()
+        clipboard_enabled = contents:match('"clipboard_enabled"%s*:%s*true') ~= nil
+    end
     local wl_paste = command_path("wl-paste")
     local cliphist = command_path("cliphist")
-    if wl_paste and cliphist and not command_running("[w]l-paste --watch.*cliphist.*store") then
+    if deck_installed and clipboard_enabled and wl_paste and cliphist and not command_running("[w]l-paste --watch.*cliphist.*store") then
         hl.exec_cmd(shell_quote(wl_paste) .. " --watch " .. shell_quote(cliphist) .. " store")
     end
-    start_if_available("opendeck --hide", "opendeck", "opendeck")
-    start_if_available("discord", "discord", "discord")
-    start_if_available("steam", "steam", "steam")
 end
 
 hl.on("hyprland.start", function()
-    start_applications()
+    refresh_session_services()
     hl.dispatch(hl.dsp.focus({ workspace = "1" }))
+    -- The helper waits for compositor readiness and repairs portals outside
+    -- the event loop, then launches login apps. Reload only refreshes services.
+    hl.exec_cmd("sh " .. shell_quote(config_home .. "/hypr/hyprland/session-start.sh"))
 end)
-hl.on("config.reloaded", start_applications)
+hl.on("config.reloaded", refresh_session_services)

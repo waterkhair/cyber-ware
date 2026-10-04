@@ -91,7 +91,7 @@ else
 fi
 
 for file in hyprland/hyprland.lua hyprland/appearance.lua hyprland/windows.lua \
-    hyprland/autostart.lua hyprland/keybindings.lua bin/cyber-ware; do
+    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware; do
     [ -f "$source_dir/$file" ] || { printf 'Required config file is missing: %s\n' "$file" >&2; exit 1; }
 done
 for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan cyber-deck; do
@@ -186,7 +186,7 @@ if [ -e "$main_config" ] && [ ! -f "$main_config" ]; then
     printf 'Refusing to replace a non-file config target: %s\n' "$main_config" >&2
     exit 1
 fi
-for file in appearance.lua windows.lua autostart.lua keybindings.lua; do
+for file in appearance.lua windows.lua autostart.lua keybindings.lua session-start.sh; do
     target=$module_dir/$file
     if [ -L "$target" ] || { [ -e "$target" ] && [ ! -f "$target" ]; }; then
         printf 'Refusing to replace an unsafe module target: %s\n' "$target" >&2
@@ -197,7 +197,7 @@ done
 for command in chmod cp cut date dirname install mkdir mktemp mv rm sed sha256sum; do
     command -v "$command" >/dev/null 2>&1 || { printf 'Required installer command missing: %s\n' "$command" >&2; exit 1; }
 done
-for command in lua hyprctl pgrep; do
+for command in lua hyprctl pgrep flock timeout busctl dbus-update-activation-environment systemctl; do
     command -v "$command" >/dev/null 2>&1 || { printf 'Required command missing before install: %s\n' "$command" >&2; exit 1; }
 done
 if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
@@ -260,9 +260,10 @@ cp -- "$source_dir/hyprland/hyprland.lua" "$stage_dir/hyprland.lua"
 # started with --config pointing elsewhere or silently kept the previous file.
 install_token=${stage_dir##*/}
 printf '\n_G.cyber_ware_install_token = "%s"\n' "$install_token" >> "$stage_dir/hyprland.lua"
-for file in appearance.lua windows.lua autostart.lua keybindings.lua; do
+for file in appearance.lua windows.lua autostart.lua keybindings.lua session-start.sh; do
     cp -- "$source_dir/hyprland/$file" "$stage_dir/$file"
 done
+sh -n "$stage_dir/session-start.sh"
 for file in "$stage_dir"/*.lua; do
     CYBER_WARE_LUA_FILE="$file" lua -e 'assert(loadfile(os.getenv("CYBER_WARE_LUA_FILE")))' || { printf 'Staged Lua validation failed: %s\n' "$file" >&2; exit 1; }
 done
@@ -303,7 +304,7 @@ if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
     autoreload_paused=yes
 fi
 publish_started=yes
-for file in appearance.lua windows.lua autostart.lua keybindings.lua; do
+for file in appearance.lua windows.lua autostart.lua keybindings.lua session-start.sh; do
     install -m 644 "$stage_dir/$file" "$module_dir/$file"
 done
 if [ "$migrate_env" = yes ] || [ "$migrate_monitor" = yes ]; then
@@ -443,14 +444,16 @@ case " $selected_components " in
         fi
         ;;
 esac
-for optional in cliphist-fuzzel; do
-    if ! command -v "$optional" >/dev/null 2>&1; then
-        printf 'Optional shortcut helper unavailable: %s; its binding is omitted until configured.\n' "$optional"
-    fi
-done
-if [ ! -f "$config_home/hypr/hypridle.conf" ]; then
-    printf '%s\n' 'hypridle auto-start is skipped because no ~/.config/hypr/hypridle.conf exists; configure hypridle/hyprlock separately to enable idle actions.'
-fi
+case " $selected_components " in
+    *" cyber-jackout "*)
+        printf '%s\n' 'Optional lock/idle policy is not installed by default; enable it with cyber-jackout --enable-idle.'
+        ;;
+esac
+case " $selected_components " in
+    *" cyber-deck "*)
+        printf '%s\n' 'Clipboard history is off by default; install cliphist and wl-clipboard, then run cyber-deck --clipboard enable to add Super+V.'
+        ;;
+esac
 case ":${PATH:-}:" in
     *":$command_dir:"*) ;;
     *) printf 'For interactive shell use, add %s to PATH (fish: fish_add_path %s). Hyprland/Waybar already use this recorded path.\n' "$command_dir" "$command_dir" ;;

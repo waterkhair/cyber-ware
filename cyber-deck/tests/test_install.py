@@ -2,6 +2,7 @@
 
 from contextlib import redirect_stdout
 import io
+import json
 import os
 from pathlib import Path
 import signal
@@ -9,6 +10,7 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from cyber_deck import cli, installer
@@ -114,6 +116,53 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(cli._toggle(), 0)
         execute.assert_called_once_with(str(self.mocks / "fuzzel"),
             [str(self.mocks / "fuzzel"), f"--config={self.config / 'themes/greenline.ini'}"])
+
+    def test_clipboard_enable_preserves_other_settings_and_checks_requirements(self):
+        settings = self.config / "config.json"
+        settings.parent.mkdir(parents=True)
+        settings.write_text('{"custom": "kept"}\n')
+        with patch.object(cli.shutil, "which", side_effect=lambda name: f"/usr/bin/{name}"):
+            self.assertEqual(cli._set_clipboard(True), 0)
+        self.assertEqual(json.loads(settings.read_text()), {"custom": "kept", "clipboard_enabled": True})
+        with patch.object(cli.shutil, "which", return_value=None):
+            with self.assertRaisesRegex(RuntimeError, "clipboard history requires"):
+                cli._set_clipboard(True)
+
+    def test_uninstall_disables_clipboard_collection_but_preserves_theme_settings(self):
+        self.install()
+        (self.config / "config.json").write_text('{"clipboard_enabled": true}\n')
+        with patch.object(cli, "_deck_pids", return_value=[]), \
+             patch.object(cli, "_stop_clipboard_watcher") as stop_watcher:
+            self.assertEqual(cli._uninstall(False), 0)
+        stop_watcher.assert_called_once()
+        self.assertFalse(json.loads((self.config / "config.json").read_text())["clipboard_enabled"])
+        self.assertTrue((self.config / "theme").is_file())
+
+    def test_clipboard_picker_decodes_selected_image_without_shell(self):
+        self.install()
+        (self.config / "theme").write_text("greenline\n")
+        selected = b"41\t[image/png] ; touch /tmp/should-not-exist\n"
+        calls = []
+
+        def run(args, **kwargs):
+            calls.append((args, kwargs))
+            if args[-1:] == ["list"]:
+                return SimpleNamespace(returncode=0, stdout=selected, stderr=b"")
+            if args[0].endswith("fuzzel"):
+                return SimpleNamespace(returncode=0, stdout=selected, stderr=b"")
+            if args[-1:] == ["decode"]:
+                self.assertEqual(kwargs["input"], selected)
+                return SimpleNamespace(returncode=0, stdout=b"\x89PNG\r\n", stderr=b"")
+            self.assertEqual(args, ["/usr/bin/wl-copy", "--type", "image/png"])
+            self.assertEqual(kwargs["input"], b"\x89PNG\r\n")
+            return SimpleNamespace(returncode=0, stdout=b"", stderr=b"")
+
+        with patch.object(cli, "clipboard_is_enabled", return_value=True), \
+             patch.object(cli.shutil, "which", side_effect=lambda name: f"/usr/bin/{name}"), \
+             patch.object(cli.subprocess, "run", side_effect=run):
+            self.assertEqual(cli._clipboard(), 0)
+        self.assertTrue(all("shell" not in kwargs for _, kwargs in calls))
+        self.assertEqual(calls[1][0][-1], f"--config={self.config / 'themes/greenline.ini'}")
 
     def test_process_detection_excludes_unrelated_fuzzel(self):
         self.install()
