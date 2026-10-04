@@ -69,7 +69,6 @@ local function start_if_available(command, executable, process_name, refresh_way
 end
 
 local function refresh_session_services()
-    start_if_available("/usr/lib/pam_kwallet_init", "/usr/lib/pam_kwallet_init", "pam_kwallet_init")
     start_if_available("waybar", "waybar", "waybar", true)
     start_if_available("mako", "mako", "mako")
     start_if_available("env QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/hyprpolkitagent/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent", "hyprpolkitagent")

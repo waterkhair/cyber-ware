@@ -11,6 +11,7 @@ wlogout_style="$config_home/wlogout/style.css"
 wlogout_layout="$config_home/wlogout/layout"
 hypridle_config="$config_home/hypr/hypridle.conf"
 hyprlock_config="$config_home/hypr/hyprlock.conf"
+hyprlock_wallpaper_config="$config_home/hypr/hyprlock-wallpaper.conf"
 
 atomic_copy() {
     local source=$1 destination=$2 temporary
@@ -25,6 +26,40 @@ atomic_copy() {
 }
 
 file_hash() { sha256sum -- "$1" | cut -d ' ' -f 1; }
+
+ensure_wallpaper_include() {
+    local temporary
+    [[ ! -L "$config_home/hypr" && ! -L "$hyprlock_wallpaper_config" ]] || {
+        printf 'Refusing symlinked wallpaper configuration: %s\n' "$hyprlock_wallpaper_config" >&2; return 1;
+    }
+    if [[ -e "$hyprlock_wallpaper_config" ]]; then
+        [[ -f "$hyprlock_wallpaper_config" ]] || { printf 'Not a regular file: %s\n' "$hyprlock_wallpaper_config" >&2; return 1; }
+        return 0
+    fi
+    mkdir -p -- "$config_home/hypr"
+    temporary=$(mktemp "${hyprlock_wallpaper_config}.XXXXXX") || return 1
+    printf '%s\n' '$CYBER_WALLPAPER = /dev/null' > "$temporary"
+    # No-clobber publication also refuses a destination created concurrently.
+    if ! ln -- "$temporary" "$hyprlock_wallpaper_config"; then
+        rm -f -- "$temporary"; return 1
+    fi
+    rm -f -- "$temporary"
+}
+
+install_lock_theme() {
+    local source=$1 temporary escaped
+    ensure_wallpaper_include || return 1
+    case "$hyprlock_wallpaper_config" in *'#'*|*'$'*|*$'\n'*)
+        printf '%s\n' 'Configuration path contains unsupported Hyprlock syntax.' >&2; return 1;;
+    esac
+    temporary=$(mktemp "${hyprlock_config}.XXXXXX") || return 1
+    escaped=$(printf '%s' "$hyprlock_wallpaper_config" | sed 's/[\\&|]/\\&/g')
+    if ! sed "s|^source = .*hyprlock-wallpaper.conf$|source = $escaped|" "$source" > "$temporary"; then
+        rm -f -- "$temporary"; return 1
+    fi
+    chmod 644 "$temporary"
+    mv -f -- "$temporary" "$hyprlock_config"
+}
 current_theme() {
     if [[ -f "$theme_config" ]]; then cat -- "$theme_config"; else printf '%s\n' synthwave; fi
 }
@@ -88,7 +123,7 @@ update_idle_theme() {
     fi
     source="$app_dir/idle/hyprlock-$name.conf"
     [[ -f "$source" ]] || { printf 'Lock theme is missing: %s\n' "$source" >&2; return 1; }
-    atomic_copy "$source" "$hyprlock_config"
+    install_lock_theme "$source" || return 1
     file_hash "$hyprlock_config" > "$state_dir/hyprlock.sha256"
 }
 
@@ -99,6 +134,8 @@ enable_idle() {
         command -v "$command" >/dev/null 2>&1 || { printf 'Missing idle integration requirement: %s\n' "$command" >&2; return 1; }
     done
     if [[ -f "$state_dir/idle-enabled" ]]; then
+        ensure_wallpaper_include || return 1
+        update_idle_theme "$(current_theme)" || return 1
         printf '%s\n' 'cyber-jackout idle/lock integration is already installed.'
         if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && ! pgrep -x hypridle >/dev/null 2>&1; then
             hyprctl reload >/dev/null || { printf '%s\n' 'Run hyprctl reload to start Hypridle.' >&2; return 1; }
@@ -116,8 +153,9 @@ enable_idle() {
         [[ ! -L "$target" && ! -e "$target" ]] || { printf 'Keeping existing user config; cannot install optional idle integration over %s\n' "$target" >&2; return 1; }
     done
     mkdir -p -- "$config_home/hypr" "$state_dir"
+    ensure_wallpaper_include || return 1
     atomic_copy "$app_dir/idle/hypridle.conf" "$hypridle_config"
-    if ! atomic_copy "$app_dir/idle/hyprlock-$(current_theme).conf" "$hyprlock_config"; then
+    if ! install_lock_theme "$app_dir/idle/hyprlock-$(current_theme).conf"; then
         rm -f -- "$hypridle_config"
         return 1
     fi
@@ -180,7 +218,7 @@ EOF
 
 check_requirements() {
     local missing=() command
-    for command in bash cat chmod cp cut dirname flock hyprctl logger mkdir mktemp mv notify-send pgrep readlink rm sed sha256sum sleep systemctl systemd-inhibit systemd-run timeout; do
+    for command in bash cat chmod cp cut dirname flock hyprctl ln logger mkdir mktemp mv notify-send pgrep readlink rm sed sha256sum sleep systemctl systemd-inhibit systemd-run timeout; do
         command -v "$command" >/dev/null 2>&1 || missing+=("$command")
     done
     if ((${#missing[@]})); then

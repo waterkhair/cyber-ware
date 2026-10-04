@@ -21,6 +21,10 @@ if name == 'hyprctl':
         p.touch()
         sys.exit(1)
 if name == 'busctl':
+    if 'Introspect' in sys.argv:
+        if not os.environ.get('FAIL_FRONTEND'):
+            print('org.freedesktop.portal.ScreenCast org.freedesktop.portal.Screenshot')
+        sys.exit(0)
     p = root / 'backend-ready'
     if not p.exists() or os.environ.get('FAIL_BACKEND'):
         p.touch()
@@ -46,6 +50,7 @@ class SessionStartTests(unittest.TestCase):
         sock.bind(str(root / 'wayland-test'))
         env = dict(os.environ, PATH=str(bin_dir) + ':/usr/bin:/bin', MOCK_ROOT=str(root),
                    XDG_RUNTIME_DIR=str(root), WAYLAND_DISPLAY='wayland-test',
+                   XDG_STATE_HOME=str(root / 'state'), PAM_KWALLET5_LOGIN='',
                    HYPRLAND_INSTANCE_SIGNATURE='isolated-test', **options)
         result = subprocess.run(['sh', str(SOURCE)], env=env, capture_output=True,
                                 text=True, timeout=10)
@@ -61,7 +66,7 @@ class SessionStartTests(unittest.TestCase):
         result, events = self.run_helper()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertGreaterEqual(events.count('hyprctl monitors -j'), 2)
-        self.assertEqual(sum(e.startswith('busctl ') for e in events), 2)
+        self.assertEqual(sum(e.startswith('busctl ') for e in events), 3)
         imported = next(i for i, e in enumerate(events) if e.startswith('dbus-update'))
         reset = next(i for i, e in enumerate(events) if 'reset-failed' in e)
         frontend = events.index('systemctl --user restart xdg-desktop-portal.service')
@@ -80,6 +85,13 @@ class SessionStartTests(unittest.TestCase):
         result, events = self.run_helper(FAIL_BACKEND='1')
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(sum(e.startswith('busctl ') for e in events), 3)
+        self.assertFalse(any(e.startswith('pgrep ') for e in events))
+
+    def test_frontend_failure_retries_and_prevents_app_launch(self):
+        result, events = self.run_helper(FAIL_FRONTEND='1')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(sum('reset-failed' in e for e in events), 3)
+        self.assertEqual(sum('Introspect' in e for e in events), 20)
         self.assertFalse(any(e.startswith('pgrep ') for e in events))
 
 if __name__ == '__main__':

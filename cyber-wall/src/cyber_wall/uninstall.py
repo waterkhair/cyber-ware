@@ -46,7 +46,10 @@ def main(args: list[str] | None = None) -> int:
         stop_wallpaper()
         if lock_restore is not None:
             config_file, original = lock_restore
-            _atomic_write(config_file, original, config_file.stat().st_mode & 0o777)
+            if original is None:
+                config_file.unlink(missing_ok=True)
+            else:
+                _atomic_write(config_file, original, config_file.stat().st_mode & 0o777)
     except (OSError, RuntimeError) as error:
         print(f"cyber-wall: could not stop cleanly; uninstall cancelled: {error}", file=sys.stderr)
         return 1
@@ -76,5 +79,5 @@ def main(args: list[str] | None = None) -> int:
         print("Configuration, saved wallpaper state, and cache were also removed.")
     else:
         print("Configuration, saved wallpaper state, and cache were preserved.")
-    print("Hyprland configuration was not changed; Hyprlock wallpaper sync is restored only during a safe --purge.")
+    print("Hyprlock's main configuration is not edited; its wallpaper include is restored only during a safe --purge.")
     return 0

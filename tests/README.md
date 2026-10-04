@@ -5,6 +5,7 @@ Run from the repository root:
 ```sh
 sh tests/test_autostart.sh
 python3 tests/test_session_start.py
+python3 tests/test_lock_include.py
 sh tests/test_install_transaction.sh
 sh tests/test_stream_bootstrap.sh
 sh tests/test_jackout_layout.sh
@@ -21,7 +22,10 @@ Shell tests require the installer dependencies, including Lua. Python tests
 use the standard library's unittest runner.
 The session startup tests need permission to create a temporary Unix socket;
 all service, compositor, and application commands are mocked. They cover delayed
-readiness, backend recovery, failure gating, and apps opened during startup.
+readiness, backend and frontend recovery, failure gating, and apps opened during
+startup. Wallet initialization is disabled and logs stay in temporary state.
+Lock tests cover custom configuration directories, missing includes on upgrade,
+symlink refusal, failed image rendering, and rollback after publication errors.
 
 Coverage includes reload activation, duplicate-process checks, managed power
 actions, copy/validation failure rollback, reinstall/uninstall baselines,

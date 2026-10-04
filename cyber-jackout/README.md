@@ -72,13 +72,19 @@ Hyprlock and Hypridle configuration are optional and are not written by the
 normal installer. Enable the bundled cyberpunk lock screen and idle policy
 explicitly with `cyber-jackout --enable-idle`. It locks after 5 minutes, turns
 the display off after 10 minutes, and requests a lock before suspend. The lock
-screen uses a solid background independent of cyber-wall. Existing
+screen uses the selected cyber-wall wallpaper when available; the image path
+lives in the separate `~/.config/hypr/hyprlock-wallpaper.conf` include, so
+changing the jackout theme preserves the wallpaper. Without a synced image,
+the background color is used. Existing
 `~/.config/hypr/hypridle.conf` or `hyprlock.conf` files are never overwritten;
 the optional command refuses to install if either already exists. The generated
 files are hash-tracked, and theme changes update only an unedited managed lock
 config. Use `cyber-jackout --disable-idle` to remove the unchanged generated
-files and stop Hypridle. If you edit either generated file, disable/uninstall
-will leave it intact and report that it must be handled manually.
+files and stop Hypridle. Theme updates create a missing wallpaper include,
+preserve existing regular includes, and refuse symlinks. Generated source paths
+respect `XDG_CONFIG_HOME`. The wallpaper include is retained because cyber-wall
+owns its selected image path. If you edit either generated lock/idle file,
+disable/uninstall will leave it intact and report that it must be handled manually.
 
 ## Usage
 

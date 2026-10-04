@@ -85,14 +85,21 @@ Edit `~/.config/cyber-wall/config.json`. The installer never overwrites it.
 
 `output` accepts `"auto"` (focused Hyprland monitor), `"ALL"`, or an exact
 monitor name such as `"DP-1"`. `WALLPAPER_OUTPUT` overrides the config for one
-invocation. `cyber-wall` leaves Hyprlock unchanged unless you run
-`cyber-wall --sync-lock-wallpaper`. That command copies the current image into
-cyber-wall state and updates the `path` in each Hyprlock `background` block.
-For a video, it extracts a still frame with optional `ffmpeg`; it does not play
-video on the lock screen. The original Hyprlock config is saved once in
-cyber-wall state. A normal uninstall preserves the sync. `--purge` restores the
-original config if it is unchanged; if you edited it since syncing, purge stops
-and preserves the files rather than deleting an image Hyprlock may reference.
+invocation. `cyber-wall` leaves Hyprlock's main theme config unchanged when you
+run `cyber-wall --sync-lock-wallpaper`. Rendering is staged before publication;
+failed writes roll back the affected configuration and state files. The command
+reports missing Hyprlock include integration rather than silently doing nothing.
+It copies the current image into
+cyber-wall state and updates the separate
+`~/.config/hypr/hyprlock-wallpaper.conf` include used by cyber-jackout's lock
+themes. For a video, it extracts a still frame with optional `ffmpeg`; it does
+not play video on the lock screen. A normal uninstall preserves the synced
+wallpaper. `--purge` restores the previous include if it is unchanged; if you
+edited it after syncing, purge stops and preserves the files.
+When upgrading from a release that edited `hyprlock.conf` directly, the first
+sync restores the saved original config and migrates its background to the new
+include. If that config was edited after the old sync, the command stops and
+asks you to review it first.
 
 The default visual template is `synthwave`. The optional `greenline` theme is a
 monochrome terminal look with classic phosphor-green text and accents on deep
