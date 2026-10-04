@@ -3,16 +3,15 @@
 `cyber-wall` is a small image/video wallpaper picker for Hyprland. It has a GTK 4
 preview window, searches configurable folders, applies image or video
 wallpapers through `mpvpaper`. It is intentionally user-scoped: it does not
-need root, alter compositor or Hyprlock configuration, or replace files in
-your existing setup. Lock-screen wallpaper selection is left as a separate
-user choice.
+need root or replace files in your existing setup. Lock-screen wallpaper
+syncing is explicit and only occurs when requested.
 
 ## Requirements
 
 - Hyprland (for automatic monitor detection; otherwise set an output name)
 - Python 3 with GTK 4 PyGObject bindings (`python-gobject`, `gtk4` on Arch)
 - `mpvpaper` to apply wallpapers
-- `ffmpeg` (optional) for video preview thumbnails
+- `ffmpeg` (optional) for video preview thumbnails and still images when syncing video wallpapers to Hyprlock
 - `hyprctl` (needed for automatic monitor detection; otherwise configure an exact output name)
 
 ## Install
@@ -52,6 +51,7 @@ cyber-wall                                  # toggle the picker
 cyber-wall --set ~/Pictures/wall.jpg       # apply an image
 cyber-wall --set ~/Videos/wall.mp4          # apply a video
 cyber-wall --set --restore                 # restore the last choice
+cyber-wall --sync-lock-wallpaper            # sync it to Hyprlock
 cyber-wall --theme                         # show current and available themes
 cyber-wall --theme greenline               # use greenline (or synthwave)
 cyber-wall --uninstall                     # uninstall, keep personal data
@@ -85,8 +85,14 @@ Edit `~/.config/cyber-wall/config.json`. The installer never overwrites it.
 
 `output` accepts `"auto"` (focused Hyprland monitor), `"ALL"`, or an exact
 monitor name such as `"DP-1"`. `WALLPAPER_OUTPUT` overrides the config for one
-invocation. `cyber-wall` never reads or edits your Hyprlock configuration. Choose
-or update your lock-screen wallpaper separately in your Hyprlock setup.
+invocation. `cyber-wall` leaves Hyprlock unchanged unless you run
+`cyber-wall --sync-lock-wallpaper`. That command copies the current image into
+cyber-wall state and updates the `path` in each Hyprlock `background` block.
+For a video, it extracts a still frame with optional `ffmpeg`; it does not play
+video on the lock screen. The original Hyprlock config is saved once in
+cyber-wall state. A normal uninstall preserves the sync. `--purge` restores the
+original config if it is unchanged; if you edited it since syncing, purge stops
+and preserves the files rather than deleting an image Hyprlock may reference.
 
 The default visual template is `synthwave`. The optional `greenline` theme is a
 monochrome terminal look with classic phosphor-green text and accents on deep
@@ -174,8 +180,8 @@ cached previews are preserved so reinstalling keeps your settings.
 
 Run `cyber-wall --uninstall --purge` to additionally remove the `cyber-wall`
 config, state, and cache. It asks you to type `cyber-wall` before proceeding.
-The command never edits Hyprland or Hyprlock config files, and never removes
-system packages. If you manually added Hyprland bindings, remove those yourself.
+The command never edits Hyprland config files, and never removes system
+packages. If you manually added Hyprland bindings, remove those yourself.
 
 ## Development
 

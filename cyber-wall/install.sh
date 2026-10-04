@@ -117,7 +117,7 @@ if [ -f "$shared_theme_file" ]; then
     shared_theme=$(sed -n '1p' "$shared_theme_file")
     case "$shared_theme" in
         synthwave|greenline)
-            CYBER_WALL_CONFIG="$config_dir/config.json" "$prefix/bin/cyber-wall" --theme "$shared_theme"
+            PYTHONDONTWRITEBYTECODE=1 CYBER_WALL_CONFIG="$config_dir/config.json" "$prefix/bin/cyber-wall" --theme "$shared_theme"
             ;;
         *) printf 'Ignoring invalid shared cyber-ware theme in %s.\n' "$shared_theme_file" >&2 ;;
     esac

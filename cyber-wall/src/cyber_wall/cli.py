@@ -11,6 +11,7 @@ USAGE = """Usage:
   cyber-wall                              Toggle the picker
   cyber-wall --set FILE                   Set an image/video wallpaper
   cyber-wall --set --restore              Restore the previous wallpaper
+  cyber-wall --sync-lock-wallpaper        Sync it to Hyprlock (video uses a still frame)
   cyber-wall --theme [greenline|synthwave] Show or set the picker theme
   cyber-wall --uninstall [--purge]        Uninstall (optionally remove saved data)
   cyber-wall --help                       Show this help
@@ -31,6 +32,11 @@ def main() -> int:
             from .wallpaper import main as set_main
 
             return set_main(args[1:])
+        if args == ["--sync-lock-wallpaper"]:
+            from .lock_wallpaper import sync_lock_wallpaper
+
+            print(f"Hyprlock wallpaper synced: {sync_lock_wallpaper()}")
+            return 0
         if args[0] == "--theme":
             if len(args) == 1:
                 config = load_config()
