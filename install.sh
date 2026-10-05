@@ -158,7 +158,7 @@ if [ -L "$bin_path_file" ] || { [ -e "$bin_path_file" ] && [ ! -f "$bin_path_fil
 fi
 if [ -f "$theme_file" ]; then
     selected_theme=$(sed -n '1p' "$theme_file")
-    case "$selected_theme" in synthwave|greenline) ;; *) printf 'Invalid shared theme in %s\n' "$theme_file" >&2; exit 1 ;; esac
+    case "$selected_theme" in synthwave|greenline|husky) ;; *) printf 'Invalid shared theme in %s\n' "$theme_file" >&2; exit 1 ;; esac
 fi
 initial_backup_name=
 created_local_config=no

@@ -3,7 +3,7 @@
 `cyber-signal` is a lightweight, user-level notification helper for Linux. It
 can report NetworkManager connectivity changes, available Arch updates, and
 low disk space. Notifications are delivered through `notify-send`; the
-selected `synthwave` or `greenline` theme sets Mako's desktop-wide defaults,
+selected `synthwave`, `greenline`, or `husky` theme sets Mako's desktop-wide defaults,
 while cyber-signal notifications receive matching app-specific emphasis.
 
 It does not need root, install packages, edit your Mako/Hyprland configuration,
@@ -71,6 +71,7 @@ cyber-signal --check disk            # check configured mounts and alert on thre
 cyber-signal --theme                 # show selected theme and Mako config path
 cyber-signal --theme greenline       # select terminal phosphor-green
 cyber-signal --theme synthwave       # select muted purple/pink synthwave
+cyber-signal --theme husky           # monochrome with green/blue accents
 cyber-signal --disable               # stop and disable monitoring
 cyber-signal --help
 ```

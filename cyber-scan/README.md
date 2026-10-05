@@ -38,6 +38,8 @@ user-local paths. Ensure `~/.local/bin` is on `PATH`.
 ```sh
 cyber-scan          # select a region, capture it, and open Swappy
 cyber-scan --check  # check dependencies and Wayland environment
+cyber-scan --theme  # show current accent theme
+cyber-scan --theme husky  # use blue/green selection accents
 cyber-scan --help
 cyber-scan --uninstall
 ```
@@ -47,6 +49,11 @@ saves when `auto_save=false`; the destination follows `save_dir` in your
 Swappy configuration. cyber-scan creates `~/Pictures/Screenshots` before
 opening Swappy; the final save destination is controlled by Swappy's
 `save_dir` setting.
+
+The Slurp selection uses the selected cyber-ware accent (`synthwave`,
+`greenline`, or `husky`). `cyber-ware --theme NAME` updates cyber-scan when it
+is installed. Swappy's own editor controls continue to follow the host GTK
+theme.
 
 ## Hyprland shortcut
 
@@ -70,6 +77,9 @@ cyber-scan --uninstall
 Uninstall removes only the managed command and program directory. It leaves
 Hyprland, Swappy, and package-manager configuration untouched, and does not
 delete screenshots.
+
+The saved theme selection is also preserved at
+`~/.config/cyber-scan/theme` for a future reinstall.
 
 ## License
 

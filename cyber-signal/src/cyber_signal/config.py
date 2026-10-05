@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 APP_NAME = "cyber-signal"
-THEMES = ("synthwave", "greenline")
+THEMES = ("synthwave", "greenline", "husky")
 DEFAULTS: dict[str, Any] = {
     "theme": "synthwave",
     "network_poll_seconds": 10,

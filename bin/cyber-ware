@@ -5,7 +5,7 @@ set -eu
 usage() {
     cat <<'EOF'
 Usage:
-  cyber-ware --theme [synthwave|greenline]
+  cyber-ware --theme [synthwave|greenline|husky]
   cyber-ware --uninstall
   cyber-ware --help
 
@@ -20,7 +20,7 @@ theme_file=$config_home/cyber-ware/theme
 current_theme() {
     if [ -f "$theme_file" ]; then
         IFS= read -r selected < "$theme_file" || selected=
-        case "$selected" in synthwave|greenline) printf '%s\n' "$selected"; return ;; esac
+        case "$selected" in synthwave|greenline|husky) printf '%s\n' "$selected"; return ;; esac
     fi
     printf '%s\n' synthwave
 }
@@ -128,11 +128,11 @@ case "${1:-}" in
     --theme)
         case "$#" in
             1)
-                printf 'Current theme: %s; available: synthwave, greenline\n' "$(current_theme)"
+                printf 'Current theme: %s; available: synthwave, greenline, husky\n' "$(current_theme)"
                 exit 0
                 ;;
             2) theme=$2 ;;
-            *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline]' >&2; exit 2 ;;
+            *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline|husky]' >&2; exit 2 ;;
         esac
         ;;
     --uninstall)
@@ -140,12 +140,12 @@ case "${1:-}" in
         uninstall
         exit $?
         ;;
-    *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline]' >&2; exit 2 ;;
+    *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline|husky]' >&2; exit 2 ;;
 esac
 
 case "$theme" in
-    synthwave|greenline) ;;
-    *) printf 'Unknown theme %s; choose synthwave or greenline.\n' "$theme" >&2; exit 2 ;;
+    synthwave|greenline|husky) ;;
+    *) printf 'Unknown theme %s; choose synthwave, greenline, or husky.\n' "$theme" >&2; exit 2 ;;
 esac
 case "$config_home" in /|"") printf '%s\n' 'Refusing an unsafe configuration directory.' >&2; exit 1 ;; esac
 if [ -L "$theme_file" ] || { [ -e "$theme_file" ] && [ ! -f "$theme_file" ]; }; then
@@ -163,7 +163,7 @@ trap - EXIT HUP INT TERM
 printf 'Shared theme set to %s.\n' "$theme"
 
 failures=
-for component in cyber-wall cyber-signal cyber-panel cyber-jackout cyber-deck; do
+for component in cyber-wall cyber-signal cyber-panel cyber-jackout cyber-deck cyber-console cyber-scan; do
     configured_bin=$(sed -n '1p' "$config_home/cyber-ware/bin-path" 2>/dev/null || true)
     component_command=${configured_bin:-"${PREFIX:-$HOME/.local}/bin"}/$component
     if [ -x "$component_command" ] || command -v "$component" >/dev/null 2>&1; then

@@ -1,7 +1,7 @@
 # Git and GitHub setup
 
 This is the Git setup for the umbrella `cyber-ware` repository. Initialize
-Git from the repository root (`~/Projects/Hyprland/cyber-ware`), not from
+Git from the repository root (`~/Projects/hyprland/cyber-ware`), not from
 inside a component such as `cyber-wall`; components are directories in this
 single repository, not nested Git repositories.
 
@@ -34,7 +34,7 @@ desktop.
 ## First push
 
 Create an empty GitHub repository named `cyber-ware` under the `WaterKhair`
-account. Then, from `~/Projects/Hyprland/cyber-ware`:
+account. Then, from `~/Projects/hyprland/cyber-ware`:
 
 ```sh
 git init -b main

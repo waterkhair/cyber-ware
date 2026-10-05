@@ -12,7 +12,7 @@ import signal
 import sys
 from pathlib import Path
 
-THEMES = ("synthwave", "greenline")
+THEMES = ("synthwave", "greenline", "husky")
 MANAGED_FILES = ("config.jsonc", "style.css")
 
 
@@ -167,7 +167,7 @@ def uninstall(p: dict[str, Path], purge: bool) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cyber-panel", description="Manage the cyber-panel Waybar setup.")
-    parser.add_argument("--theme", nargs="?", const="", metavar="NAME", help="show the current theme or select synthwave/greenline")
+    parser.add_argument("--theme", nargs="?", const="", metavar="NAME", help="show the current theme or select synthwave/greenline/husky")
     parser.add_argument("--status", action="store_true", help="show install and theme status")
     parser.add_argument("--uninstall", action="store_true", help="restore previous Waybar files and uninstall")
     parser.add_argument("--purge", action="store_true", help="with --uninstall, also delete cyber-panel settings and recovery copies")

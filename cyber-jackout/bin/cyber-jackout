@@ -67,16 +67,16 @@ current_theme() {
 apply_theme() {
     local name=${1:-} theme_source icon_uri escaped_icon_uri temporary icon
     if [[ -z "$name" ]]; then
-        printf 'Current theme: %s; available: synthwave, greenline\n' "$(current_theme)"
+        printf 'Current theme: %s; available: synthwave, greenline, husky\n' "$(current_theme)"
         return 0
     fi
-    case "$name" in synthwave|greenline) ;; *)
-        printf 'Unknown theme %s; choose synthwave or greenline.\n' "$name" >&2
+    case "$name" in synthwave|greenline|husky) ;; *)
+        printf 'Unknown theme %s; choose synthwave, greenline, or husky.\n' "$name" >&2
         return 2
         ;;
     esac
-    if [[ "$name" == greenline ]] && ! command -v rsvg-convert >/dev/null 2>&1; then
-        printf '%s\n' 'The greenline icon set needs librsvg (rsvg-convert); install that package before switching themes.' >&2
+    if [[ "$name" != synthwave ]] && ! command -v rsvg-convert >/dev/null 2>&1; then
+        printf '%s\n' 'The selected icon set needs librsvg (rsvg-convert); install that package before switching themes.' >&2
         return 1
     fi
     [[ -f "$state_dir/installed" ]] || { printf '%s\n' 'Theme support is not installed; run the cyber-jackout installer first.' >&2; return 1; }
@@ -84,15 +84,15 @@ apply_theme() {
     [[ -f "$theme_source" ]] || { printf 'Theme file is missing: %s\n' "$theme_source" >&2; return 1; }
     mkdir -p -- "$(dirname -- "$wlogout_style")"
     temporary=$(mktemp "${wlogout_style}.cyber-jackout.XXXXXX")
-    if [[ "$name" == greenline ]]; then
+    if [[ "$name" != synthwave ]]; then
         for icon in lock logout suspend reboot shutdown; do
-            [[ -f "$app_dir/icons/greenline/$icon.svg" ]] || {
+            [[ -f "$app_dir/icons/$name/$icon.svg" ]] || {
                 rm -f -- "$temporary"
-                printf 'Greenline icon is missing: %s\n' "$app_dir/icons/greenline/$icon.svg" >&2
+                printf 'Theme icon is missing: %s\n' "$app_dir/icons/$name/$icon.svg" >&2
                 return 1
             }
         done
-        icon_uri="$app_dir/icons/greenline"
+        icon_uri="$app_dir/icons/$name"
         escaped_icon_uri=$(printf '%s' "$icon_uri" | sed 's/[\\&|]/\\&/g')
         if ! sed "s|@ICON_DIR@|$escaped_icon_uri|g" "$theme_source" > "$temporary"; then
             rm -f -- "$temporary"
@@ -205,7 +205,7 @@ disable_idle() {
 usage() {
     cat <<'EOF'
 Usage: cyber-jackout [logout|reboot|poweroff]
-       cyber-jackout --theme [synthwave|greenline]
+       cyber-jackout --theme [synthwave|greenline|husky]
        cyber-jackout --check
        cyber-jackout --enable-idle
        cyber-jackout --disable-idle
@@ -226,8 +226,8 @@ check_requirements() {
         return 1
     fi
     printf '%s\n' 'Required commands are available.'
-    if [[ "$(current_theme)" == greenline ]] && ! command -v rsvg-convert >/dev/null 2>&1; then
-        printf '%s\n' 'Greenline icons need librsvg (rsvg-convert), which is missing.' >&2
+    if [[ "$(current_theme)" != synthwave ]] && ! command -v rsvg-convert >/dev/null 2>&1; then
+        printf '%s\n' 'Theme icons need librsvg (rsvg-convert), which is missing.' >&2
         return 1
     fi
     if command -v cyber-wall >/dev/null 2>&1; then

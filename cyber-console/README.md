@@ -82,6 +82,8 @@ and bar click actions.
 cyber-console <tool>           # toggle that tool's floating terminal
 cyber-console --list           # show configured tools and command availability
 cyber-console --check          # check Ghostty, Hyprland, and configured tools
+cyber-console --theme          # show current theme
+cyber-console --theme husky    # use husky for newly opened tools
 cyber-console --uninstall      # remove program files; keep your config
 cyber-console --uninstall --purge  # remove program and config after confirmation
 cyber-console --help
@@ -113,6 +115,12 @@ Keep every tool you want to launch in `applications`. A command is an argument
 array, not shell text, so arguments are passed literally and shell expansion is
 not performed. The `class` should be unique per tool and must match the
 Hyprland rule you use for that window.
+
+`cyber-console --theme` selects the Ghostty palette for future floating
+terminal windows. It supports `synthwave`, `greenline`, and `husky`; the
+umbrella `cyber-ware --theme NAME` keeps this selection in sync with the rest
+of the desktop. Theme files are stored with cyber-console's app files, so it
+does not edit or replace your main Ghostty configuration.
 
 ## Hyprland integration
 

@@ -9,7 +9,7 @@ logind delay inhibitor.
 
 It is one user-local command with no resident daemon and no root installer.
 Its two wlogout styles match the companion `cyber-panel` and `cyber-wall`
-palettes: `synthwave` and `greenline`.
+palettes: `synthwave`, `greenline`, and `husky`.
 The `greenline` theme bundles green SVG versions of the wlogout icons so their
 glyphs match the phosphor-green palette instead of retaining the system icon
 set's lavender color. `synthwave` continues to use the stock wlogout icons.
@@ -23,7 +23,7 @@ Runtime requirements:
 - An active Hyprland session launched with the Lua configuration API used by
   `hl.dispatch(hl.dsp.exit())`
 - A systemd user manager and logind
-- `librsvg` (`rsvg-convert`) when using the `greenline` theme so GTK can render
+- `librsvg` (`rsvg-convert`) when using `greenline` or `husky` so GTK can render
   its bundled SVG icons
 
 Optional integration:
@@ -99,6 +99,7 @@ cyber-jackout --disable-idle # remove unchanged managed idle/lock configuration
 cyber-jackout --theme      # show the selected theme
 cyber-jackout --theme greenline
 cyber-jackout --theme synthwave
+cyber-jackout --theme husky
 cyber-jackout --uninstall  # remove cyber-jackout files
 cyber-jackout --uninstall --purge  # also remove its saved settings/recovery copies
 ```

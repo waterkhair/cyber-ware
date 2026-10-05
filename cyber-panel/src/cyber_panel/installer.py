@@ -58,7 +58,7 @@ def main() -> int:
         if shutil.which(name) is None:
             print(f"Optional command missing: {name} ({package}); its click action will not work until configured.", file=sys.stderr)
 
-    if not (source / "config.jsonc").is_file() or not (source / "themes/synthwave.css").is_file():
+    if not (source / "config.jsonc").is_file() or not all((source / "themes" / f"{name}.css").is_file() for name in ("synthwave", "greenline", "husky")):
         print("The cyber-panel source files are incomplete.", file=sys.stderr)
         return 1
     waybar_dir.mkdir(parents=True, exist_ok=True)
@@ -94,12 +94,12 @@ def main() -> int:
             shared_theme = shared_theme_file.read_text(encoding="utf-8").splitlines()[0].strip()
         except (OSError, IndexError):
             shared_theme = ""
-        if shared_theme in ("synthwave", "greenline"):
+        if shared_theme in ("synthwave", "greenline", "husky"):
             theme = shared_theme
             settings["theme"] = theme
         elif shared_theme:
             print(f"Ignoring invalid shared cyber-ware theme in {shared_theme_file}.", file=sys.stderr)
-    if theme not in ("synthwave", "greenline"):
+    if theme not in ("synthwave", "greenline", "husky"):
         print(f"Unknown saved theme {theme!r}; using synthwave.", file=sys.stderr)
         theme = "synthwave"
         settings["theme"] = theme
@@ -192,7 +192,7 @@ def main() -> int:
         command_tmp.unlink(missing_ok=True)
     print(f"Installed cyber-panel command in {command_dir}.")
     print(f"Waybar configuration: {config_target}")
-    print(f"Theme: {theme} (switch with cyber-panel --theme greenline|synthwave)")
+    print(f"Theme: {theme} (switch with cyber-panel --theme greenline|synthwave|husky)")
     print(f"Original Waybar files are preserved in {backup_dir}; uninstall with cyber-panel --uninstall.")
     return 0
 

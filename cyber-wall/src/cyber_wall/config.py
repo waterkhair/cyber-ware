@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-AVAILABLE_THEMES = ("greenline", "synthwave")
+AVAILABLE_THEMES = ("greenline", "synthwave", "husky")
 
 
 DEFAULTS: dict[str, Any] = {

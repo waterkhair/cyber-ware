@@ -95,27 +95,27 @@ shared_theme_file=$config_home/cyber-ware/theme
 if [ -z "${CYBER_JACKOUT_THEME:-}" ] && [ -f "$shared_theme_file" ]; then
     shared_theme=$(sed -n '1p' "$shared_theme_file")
     case "$shared_theme" in
-        synthwave|greenline) theme=$shared_theme ;;
+        synthwave|greenline|husky) theme=$shared_theme ;;
         *) printf 'Ignoring invalid shared cyber-ware theme in %s.\n' "$shared_theme_file" >&2 ;;
     esac
 fi
 theme=${theme:-synthwave}
 case "$theme" in
-    synthwave|greenline) ;;
-    *) printf 'Unknown theme %s; choose synthwave or greenline.\n' "$theme" >&2; exit 1 ;;
+    synthwave|greenline|husky) ;;
+    *) printf 'Unknown theme %s; choose synthwave, greenline, or husky.\n' "$theme" >&2; exit 1 ;;
 esac
-if [ "$theme" = greenline ] && ! command -v rsvg-convert >/dev/null 2>&1; then
-    printf '%s\n' 'The greenline icon set needs librsvg (rsvg-convert); install it before choosing greenline.' >&2
+if [ "$theme" != synthwave ] && ! command -v rsvg-convert >/dev/null 2>&1; then
+    printf '%s\n' 'The selected icon set needs librsvg (rsvg-convert); install it before choosing this theme.' >&2
     exit 1
 fi
 if [ ! -f "$project_dir/themes/$theme.css" ]; then
     printf 'Theme file is missing: %s\n' "$project_dir/themes/$theme.css" >&2
     exit 1
 fi
-if [ "$theme" = greenline ]; then
+if [ "$theme" != synthwave ]; then
     for icon in lock logout suspend reboot shutdown; do
-        if [ ! -f "$project_dir/icons/greenline/$icon.svg" ]; then
-            printf 'Greenline icon is missing: %s\n' "$project_dir/icons/greenline/$icon.svg" >&2
+        if [ ! -f "$project_dir/icons/$theme/$icon.svg" ]; then
+            printf 'Theme icon is missing: %s\n' "$project_dir/icons/$theme/$icon.svg" >&2
             exit 1
         fi
     done
@@ -151,8 +151,8 @@ stage_dir=
 ln -sfn "$app_dir/bin/cyber-jackout" "$command_path"
 
 style_tmp=$(mktemp "$wlogout_dir/.style.css.cyber-jackout.XXXXXX")
-if [ "$theme" = greenline ]; then
-    icon_uri="$app_dir/icons/greenline"
+if [ "$theme" != synthwave ]; then
+    icon_uri="$app_dir/icons/$theme"
     escaped_icon_uri=$(printf '%s' "$icon_uri" | sed 's/[\\&|]/\\&/g')
     sed "s|@ICON_DIR@|$escaped_icon_uri|g" "$app_dir/themes/$theme.css" > "$style_tmp"
 else
@@ -189,6 +189,6 @@ fi
 
 printf 'Installed cyber-jackout in %s\n' "$app_dir"
 printf 'Command: %s\n' "$command_path"
-printf 'wlogout theme: %s (switch with cyber-jackout --theme synthwave|greenline)\n' "$theme"
+printf 'wlogout theme: %s (switch with cyber-jackout --theme synthwave|greenline|husky)\n' "$theme"
 printf '%s\n' 'Run cyber-jackout --check to verify requirements.'
 printf '%s\n' 'The managed wlogout layout routes logout, reboot, and shutdown through cyber-jackout; lock uses hyprlock --grace 0 when installed (otherwise loginctl), and suspend uses systemctl.'

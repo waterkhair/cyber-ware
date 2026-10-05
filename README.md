@@ -13,12 +13,12 @@ components they want.
 - [`cyber-signal/`](cyber-signal/README.md) — user-scoped system status
   notifications with Mako themes and optional systemd user timers.
 - [`cyber-panel/`](cyber-panel/README.md) — a themed Waybar setup for Hyprland,
-  with synthwave and greenline styles.
+  with synthwave, greenline, and husky styles.
 - [`cyber-console/`](cyber-console/README.md) — one command to toggle floating
   Ghostty windows for terminal tools such as Impala, Wiremix, Bluetui, btop,
-  and Yazi.
+  and Yazi, with matching terminal palettes.
 - [`cyber-jackout/`](cyber-jackout/README.md) — clean Hyprland logout, reboot,
-  and shutdown with wallpaper/portal cleanup and matching synthwave/greenline
+  and shutdown with wallpaper/portal cleanup and matching synthwave/greenline/husky
   wlogout themes.
 - [`cyber-scan/`](cyber-scan/README.md) — Wayland region screenshots through
   grim, slurp, and swappy.
@@ -86,12 +86,14 @@ The installer also provides one shared theme command:
 cyber-ware --theme                 # show the selected theme
 cyber-ware --theme greenline       # switch the desktop to greenline
 cyber-ware --theme synthwave       # switch the desktop to synthwave
+cyber-ware --theme husky           # switch to monochrome with green/blue accents
 ```
 
 The shared theme is saved in `~/.config/cyber-ware/theme` (or under
 `$XDG_CONFIG_HOME`). Hyprland reads it for active/inactive window and group
 borders. The command also updates installed `cyber-wall`, `cyber-signal`,
-`cyber-panel`, `cyber-jackout`, and `cyber-deck`, then reloads Hyprland.
+`cyber-panel`, `cyber-jackout`, `cyber-deck`, `cyber-console`, and
+`cyber-scan`, then reloads Hyprland.
 Missing components are skipped; components installed later inherit the saved
 theme. `synthwave` is the default when no shared selection exists.
 
@@ -120,17 +122,17 @@ Each component README also documents a convenient one-command installer for
 that component when you want to install it separately.
 
 For Waybar, `cyber-panel` replaces the default user config and stylesheet after
-preserving the existing copies, then provides `synthwave` and `greenline`
+preserving the existing copies, then provides `synthwave`, `greenline`, and `husky`
 themes. Its standalone install, dependency, and recovery details are in the
 [`cyber-panel` README](cyber-panel/README.md).
 
 `cyber-console` provides a single configurable command for toggling floating
-Ghostty TUI windows. Its installer leaves compositor bindings and window rules
+Ghostty TUI windows with matching terminal palettes. Its installer leaves compositor bindings and window rules
 to the user; integration examples are in the
 [`cyber-console` README](cyber-console/README.md).
 
-`cyber-deck` toggles the Fuzzel application launcher and provides synthwave and
-greenline themes. Its standalone installer does not edit Hyprland bindings;
+`cyber-deck` toggles the Fuzzel application launcher and provides synthwave,
+greenline, and husky themes. Its standalone installer does not edit Hyprland bindings;
 the bundled cyber-ware configuration binds Super+Space when the component is
 installed.
 Optional clipboard history can be enabled with `cyber-deck --clipboard enable`;

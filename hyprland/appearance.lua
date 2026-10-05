@@ -1,4 +1,4 @@
--- Shared cyber-ware palette. The user command writes `synthwave` or `greenline`
+-- Shared cyber-ware palette. The user command writes `synthwave`, `greenline`, or `husky`
 -- to ~/.config/cyber-ware/theme; absent/invalid values keep synthwave default.
 local home = os.getenv("HOME") or ""
 local config_home = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
@@ -7,7 +7,7 @@ local theme = "synthwave"
 if theme_file then
     local selected = theme_file:read("*l")
     theme_file:close()
-    if selected == "greenline" or selected == "synthwave" then theme = selected end
+    if selected == "greenline" or selected == "synthwave" or selected == "husky" then theme = selected end
 end
 
 local palettes = {
@@ -34,6 +34,18 @@ local palettes = {
         groupbar_inactive = "rgba(5bd67d1a)",
         groupbar_locked_active = "rgba(f1c66d33)",
         groupbar_locked_inactive = "rgba(f1c66d1a)",
+    },
+    husky = {
+        active = { colors = { "rgba(63c9eaff)", "rgba(74e0a7ff)" }, angle = 45 },
+        inactive = "rgba(a9bac466)",
+        group_active = { colors = { "rgba(63c9eaaa)", "rgba(74e0a799)" }, angle = 45 },
+        group_inactive = "rgba(78a9bd44)",
+        locked_active = "rgba(83a8d388)",
+        locked_inactive = "rgba(83a8d344)",
+        groupbar_active = { colors = { "rgba(63c9ea33)", "rgba(74e0a733)" }, angle = 45 },
+        groupbar_inactive = "rgba(78a9bd1a)",
+        groupbar_locked_active = "rgba(83a8d333)",
+        groupbar_locked_inactive = "rgba(83a8d31a)",
     },
 }
 local palette = palettes[theme]

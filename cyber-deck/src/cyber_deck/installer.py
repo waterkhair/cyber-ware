@@ -110,7 +110,7 @@ def install(source: Path) -> None:
     print(f"Installed cyber-deck in {app}")
     print(f"Command: {command}")
     print(f"Fuzzel themes: {config / 'themes'}")
-    print("Start with: cyber-deck; set the theme with cyber-deck --theme greenline|synthwave.")
+    print("Start with: cyber-deck; set the theme with cyber-deck --theme greenline|synthwave|husky.")
     print("Super+Space requires a Hyprland binding to this command; reload Hyprland after updating it.")
 
 

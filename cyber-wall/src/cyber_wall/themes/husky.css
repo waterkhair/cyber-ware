@@ -1,0 +1,45 @@
+/* husky: neutral monochrome surfaces with understated green/blue accents. */
+window { background: transparent; }
+
+#shell {
+    background: #080c0f;
+    border: none;
+    border-radius: 16px;
+    padding: 18px;
+}
+
+#title { color: #e4eaec; font-size: 20px; font-weight: bold; }
+#subtitle, #hint { color: #9aaab0; }
+
+#preview-frame {
+    background: #11191e;
+    border: 2px solid #63b9d2;
+    border-radius: 11px;
+    padding: 8px;
+}
+#preview { background: #05080a; border-radius: 7px; }
+
+#media-badge {
+    background: #75bce0;
+    color: #081116;
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin: 10px;
+    font-weight: bold;
+}
+#media-badge.image-badge { background: #7ed9c2; color: #07110e; }
+
+entry {
+    background: #11191e;
+    color: #e4eaec;
+    border: 1px solid #63b9d2;
+    border-radius: 8px;
+    padding: 7px 10px;
+}
+entry:focus { border-color: #7ed9c2; }
+list { background: #080c0f; }
+row { color: #d7e0e3; border-radius: 7px; padding: 7px 10px; }
+row:hover { background: #1a2930; }
+row:selected { background: #244b55; color: #ffffff; }
+.badge { color: #75bce0; min-width: 58px; font-weight: bold; }
+.badge-video { color: #7ed9c2; }

@@ -91,13 +91,13 @@ theme=synthwave
 if [ -f "$config_home/cyber-signal/config.json" ]; then
     configured_theme=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("theme", "synthwave"))' \
         "$config_home/cyber-signal/config.json" 2>/dev/null || printf '%s' synthwave)
-    case "$configured_theme" in synthwave|greenline) theme=$configured_theme ;; esac
+    case "$configured_theme" in synthwave|greenline|husky) theme=$configured_theme ;; esac
 fi
 shared_theme_file=$config_home/cyber-ware/theme
 if [ -f "$shared_theme_file" ]; then
     shared_theme=$(sed -n '1p' "$shared_theme_file")
     case "$shared_theme" in
-        synthwave|greenline) theme=$shared_theme ;;
+        synthwave|greenline|husky) theme=$shared_theme ;;
         *) printf 'Ignoring invalid shared cyber-ware theme in %s.\n' "$shared_theme_file" >&2 ;;
     esac
 fi

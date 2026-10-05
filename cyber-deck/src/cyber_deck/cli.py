@@ -21,7 +21,7 @@ Usage:
   cyber-deck                              Toggle the application launcher
   cyber-deck --clipboard                  Pick a saved clipboard item
   cyber-deck --clipboard enable|disable   Enable or disable history collection
-  cyber-deck --theme [synthwave|greenline] Show or set the theme
+  cyber-deck --theme [synthwave|greenline|husky] Show or set the theme
   cyber-deck --check                     Check Fuzzel and theme configs
   cyber-deck --uninstall [--purge]        Uninstall (optionally remove themes)
   cyber-deck --help                      Show this help
@@ -227,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Available themes: {' | '.join(THEMES)}")
                 return 0
             if len(args) != 2:
-                raise ValueError("use: cyber-deck --theme [synthwave|greenline]")
+                raise ValueError("use: cyber-deck --theme [synthwave|greenline|husky]")
             fuzzel_config(args[1])
             set_theme(args[1])
             print(f"Theme set to {args[1]}; it will apply the next time the launcher opens.")

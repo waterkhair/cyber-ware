@@ -3,8 +3,8 @@
 `cyber-panel` is a standalone Waybar configuration and theme package for
 Hyprland. It provides a compact status bar with workspace pills, active-window
 title, media controls, system tray, network state, volume, and clock. It ships
-two styles: `synthwave` (muted violet/cyan) and `greenline` (phosphor green on
-near-black).
+three styles: `synthwave` (muted violet/cyan), `greenline` (phosphor green on
+near-black), and `husky` (monochrome with green and blue accents).
 
 The package only manages its own Waybar configuration and stylesheet. It does
 not install system packages, edit Hyprland config, add key bindings, or start
@@ -76,6 +76,7 @@ cyber-panel                         # show install and theme status
 cyber-panel --theme                 # show selected and available themes
 cyber-panel --theme greenline       # switch styles and reload running Waybar
 cyber-panel --theme synthwave       # switch back to synthwave
+cyber-panel --theme husky           # monochrome with green/blue accents
 cyber-panel --uninstall             # restore the original Waybar files
 cyber-panel --uninstall --purge     # restore, then remove settings and recovery copies
 cyber-panel --help
@@ -101,7 +102,8 @@ volume scrolling is intentionally a no-op so scrolling over the pill does not
 change volume accidentally.
 
 The theme selector changes only the CSS, not the Waybar module layout. The
-source styles are `themes/synthwave.css` and `themes/greenline.css`; installed
+source styles are `themes/synthwave.css`, `themes/greenline.css`, and
+`themes/husky.css`; installed
 copies are in `~/.local/share/cyber-panel/themes/`. The live stylesheet is
 `~/.config/waybar/style.css`.
 

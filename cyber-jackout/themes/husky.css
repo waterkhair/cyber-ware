@@ -1,0 +1,46 @@
+/* husky palette: dark monochrome power menu with quiet green/blue focus. */
+* { background-image: none; box-shadow: none; }
+
+window { background-color: rgba(8, 12, 15, 0.94); }
+
+button {
+  margin: 6px;
+  border: 1px solid rgba(116, 151, 164, 0.34);
+  border-radius: 12px;
+  color: #e4eaec;
+  background-color: rgba(17, 25, 30, 0.98);
+  background-repeat: no-repeat;
+  background-position: center 35%;
+  background-size: 28%;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 14px;
+  padding: 24px;
+}
+
+button:hover,
+button:focus,
+button:active {
+  color: #ffffff;
+  background-color: rgba(54, 111, 129, 0.42);
+  border-color: #75bce0;
+  outline-style: solid;
+  outline-width: 2px;
+  outline-color: rgba(126, 217, 194, 0.38);
+}
+
+button#logout:hover,
+button#reboot:hover,
+button#suspend:hover,
+button#lock:hover { background-color: #24434e; border-color: #7ed9c2; }
+
+button#shutdown:hover {
+  color: #071014;
+  background-color: #75bce0;
+  border-color: #a6d8f0;
+}
+
+#lock { background-image: image(url("@ICON_DIR@/lock.svg")); }
+#logout { background-image: image(url("@ICON_DIR@/logout.svg")); }
+#suspend { background-image: image(url("@ICON_DIR@/suspend.svg")); }
+#reboot { background-image: image(url("@ICON_DIR@/reboot.svg")); }
+#shutdown { background-image: image(url("@ICON_DIR@/shutdown.svg")); }

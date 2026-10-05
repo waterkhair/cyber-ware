@@ -32,16 +32,37 @@ class CyberConsoleTests(unittest.TestCase):
 
     def test_new_client_uses_dedicated_ghostty_class_and_app_arguments(self):
         config = json.loads((ROOT / "config.example.json").read_text(encoding="utf-8"))
-        with (
-            patch.object(cli, "close_window", return_value=False),
-            patch.object(cli.shutil, "which", return_value="/usr/bin/found"),
-            patch.object(cli.os, "execvp", side_effect=OSError("test stop")) as execvp,
-        ):
-            self.assertEqual(cli.toggle("wiremix", config), 1)
+        with tempfile.TemporaryDirectory(prefix="cyber-console-theme-test-") as temp:
+            data = Path(temp) / "data/cyber-console"
+            (data / "themes").mkdir(parents=True)
+            (data / "themes/husky").write_text("background = #080c0f\n", encoding="utf-8")
+            with (
+                patch.object(cli, "paths", return_value={"data": data}),
+                patch.object(cli, "close_window", return_value=False),
+                patch.object(cli.shutil, "which", return_value="/usr/bin/found"),
+                patch.object(cli.os, "execvp", side_effect=OSError("test stop")) as execvp,
+                patch.object(cli, "current_theme", return_value="husky"),
+            ):
+                self.assertEqual(cli.toggle("wiremix", config), 1)
         executable, argv = execvp.call_args.args
         self.assertEqual(executable, "ghostty")
         self.assertIn("--class=org.cyber-ware.cyber-console.wiremix", argv)
+        self.assertIn(f"--theme={data / 'themes/husky'}", argv)
         self.assertEqual(argv[-4:], ["wiremix", "--mouse", "--theme", "default"])
+
+    def test_theme_selection_accepts_husky_and_rejects_symlink(self):
+        with tempfile.TemporaryDirectory(prefix="cyber-console-theme-select-") as temp:
+            config_home = Path(temp) / "config"
+            with patch.dict(os.environ, {"HOME": temp, "XDG_CONFIG_HOME": str(config_home)}, clear=False):
+                cli.set_theme("husky")
+                self.assertEqual(cli.current_theme(), "husky")
+                (config_home / "cyber-console/theme").unlink()
+                target = Path(temp) / "unrelated"
+                target.write_text("keep\n", encoding="utf-8")
+                (config_home / "cyber-console/theme").symlink_to(target)
+                with self.assertRaises(RuntimeError):
+                    cli.set_theme("husky")
+                self.assertEqual(target.read_text(encoding="utf-8"), "keep\n")
 
     def test_installer_creates_user_local_command_and_preserves_existing_config(self):
         with tempfile.TemporaryDirectory(prefix="cyber-console-test-") as temp:

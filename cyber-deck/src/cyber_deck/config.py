@@ -8,7 +8,7 @@ import stat
 import tempfile
 from pathlib import Path
 
-THEMES = ("synthwave", "greenline")
+THEMES = ("synthwave", "greenline", "husky")
 
 
 def config_dir() -> Path:

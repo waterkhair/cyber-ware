@@ -76,7 +76,7 @@ class CyberPanelAssetsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="cyber-panel-theme-test-") as temp:
             root = Path(temp)
             (root / "themes").mkdir()
-            for name in ("synthwave", "greenline"):
+            for name in ("synthwave", "greenline", "husky"):
                 shutil.copy2(ROOT / "themes" / f"{name}.css", root / "themes" / f"{name}.css")
             env = {
                 "HOME": str(root),

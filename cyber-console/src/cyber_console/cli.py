@@ -17,10 +17,42 @@ def paths() -> dict[str, Path]:
     home = Path.home()
     return {
         "config": Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")) / "cyber-console/config.json",
+        "theme": Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")) / "cyber-console/theme",
         "data": Path(os.environ.get("XDG_DATA_HOME", home / ".local/share")) / "cyber-console",
         "prefix": Path(os.environ.get("PREFIX", home / ".local")),
         "command": Path(os.environ.get("CYBER_CONSOLE_BIN_PATH", Path(os.environ.get("PREFIX", home / ".local")) / "bin/cyber-console")),
     }
+
+
+THEMES = ("synthwave", "greenline", "husky")
+
+
+def current_theme() -> str:
+    p = paths()
+    for selection in (p["theme"], p["config"].parent.parent / "cyber-ware/theme"):
+        try:
+            value = selection.read_text(encoding="utf-8").splitlines()[0].strip()
+        except (OSError, IndexError):
+            continue
+        if value in THEMES:
+            return value
+    return "synthwave"
+
+
+def set_theme(name: str) -> None:
+    if name not in THEMES:
+        raise ValueError(f"theme must be one of: {', '.join(THEMES)}")
+    path = paths()["theme"]
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise RuntimeError(f"Refusing unsafe theme selection path: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        temporary.write_text(name + "\n", encoding="utf-8")
+        temporary.chmod(0o600)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def load_config() -> dict:
@@ -154,7 +186,11 @@ def toggle(name: str, config: dict) -> int:
     if missing:
         print("Missing executable(s): " + ", ".join(missing), file=sys.stderr)
         return 1
-    argv = [terminal, f"--class={class_name}", f"--title={title}", "-e", *command]
+    theme_file = paths()["data"] / "themes" / current_theme()
+    argv = [terminal, f"--class={class_name}", f"--title={title}"]
+    if theme_file.is_file():
+        argv.append(f"--theme={theme_file}")
+    argv.extend(["-e", *command])
     try:
         os.execvp(terminal, argv)
     except OSError as error:
@@ -180,6 +216,7 @@ def uninstall(purge: bool) -> int:
     command.unlink(missing_ok=True)
     shutil.rmtree(p["data"] / "src/cyber_console", ignore_errors=True)
     (p["data"] / "config.example.json").unlink(missing_ok=True)
+    shutil.rmtree(p["data"] / "themes", ignore_errors=True)
     (p["data"] / ".cyber-console-managed").unlink(missing_ok=True)
     for directory in (p["data"] / "src", p["data"]):
         try:
@@ -188,6 +225,7 @@ def uninstall(purge: bool) -> int:
             pass
     if purge:
         p["config"].unlink(missing_ok=True)
+        p["theme"].unlink(missing_ok=True)
         try:
             p["config"].parent.rmdir()
         except OSError:
@@ -205,12 +243,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="check Ghostty, Hyprland integration, and configured tools")
     parser.add_argument("--uninstall", action="store_true", help="uninstall cyber-console but keep configuration")
     parser.add_argument("--purge", action="store_true", help="with --uninstall, also remove cyber-console configuration")
+    parser.add_argument("--theme", nargs="?", const="", metavar="NAME", help="show or select synthwave, greenline, or husky")
     args = parser.parse_args(argv)
     if args.purge and not args.uninstall:
         parser.error("--purge requires --uninstall")
     if args.uninstall:
         return uninstall(args.purge)
     try:
+        if args.theme is not None:
+            if args.theme:
+                set_theme(args.theme)
+                print(f"Theme set to {args.theme}; newly opened console windows will use it.")
+            else:
+                print(f"Current theme: {current_theme()}; available: {' | '.join(THEMES)}")
+            return 0
         config = load_config()
         if args.list:
             return list_apps(config)

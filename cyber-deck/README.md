@@ -1,7 +1,7 @@
 # cyber-deck
 
 `cyber-deck` toggles the Fuzzel application launcher for Hyprland. It provides
-two Fuzzel themes, `synthwave` and `greenline`, and an optional themed
+three Fuzzel themes, `synthwave`, `greenline`, and `husky`, and an optional themed
 clipboard history picker backed by cliphist. It works as a standalone
 cyber-ware component and does not install system packages.
 
@@ -59,6 +59,7 @@ cyber-deck --clipboard disable     # disable clipboard history collection
 cyber-deck --theme                 # show the selected theme
 cyber-deck --theme greenline       # switch to greenline
 cyber-deck --theme synthwave       # switch to synthwave
+cyber-deck --theme husky           # monochrome with green/blue accents
 cyber-deck --check                 # validate both Fuzzel theme files
 cyber-deck --uninstall             # remove program; keep theme files
 cyber-deck --uninstall --purge     # confirm, then remove theme files too
@@ -99,7 +100,8 @@ standalone component does not update an older desktop configuration for you.
 
 ## Shared cyber-ware themes
 
-`cyber-ware --theme synthwave` and `cyber-ware --theme greenline` also update
+`cyber-ware --theme synthwave`, `cyber-ware --theme greenline`, and
+`cyber-ware --theme husky` also update
 cyber-deck when it is installed. New installs inherit the currently selected
 shared theme. Direct `cyber-deck --theme ...` changes only cyber-deck's
 selection. Reinstalling preserves that selection; the shared theme is inherited

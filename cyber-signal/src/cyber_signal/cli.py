@@ -21,7 +21,7 @@ Usage:
   cyber-signal --check network|updates|disk  Run a check once
   cyber-signal --watch network               Monitor network state changes
   cyber-signal --test                        Send a preview notification
-  cyber-signal --theme [synthwave|greenline] [--no-reload] Save/apply a theme
+  cyber-signal --theme [synthwave|greenline|husky] [--no-reload] Save/apply a theme
   cyber-signal --enable                      Enable user services and timers
   cyber-signal --disable                     Stop and disable user services
   cyber-signal --status                      Show component status
@@ -312,7 +312,7 @@ def main() -> int:
             no_reload = "--no-reload" in args[1:]
             theme_args = [arg for arg in args[1:] if arg != "--no-reload"]
             if len(theme_args) > 1:
-                raise ValueError("usage: cyber-signal --theme [synthwave|greenline] [--no-reload]")
+                raise ValueError("usage: cyber-signal --theme [synthwave|greenline|husky] [--no-reload]")
             return _theme(theme_args[0] if theme_args else None, reload_mako=not no_reload)
         if args == ["--enable"]:
             return _enable()

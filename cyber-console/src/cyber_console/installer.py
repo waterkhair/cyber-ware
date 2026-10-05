@@ -26,14 +26,18 @@ def main() -> int:
     if app_dir.is_symlink() or (app_dir.exists() and not (app_dir / ".cyber-console-managed").is_file()):
         print(f"Refusing to replace unowned or symlinked application directory: {app_dir}", file=sys.stderr)
         return 1
-    if any(path.is_symlink() for path in (app_dir / ".cyber-console-managed", app_dir / "src", app_dir / "src/cyber_console", app_dir / "config.example.json")):
+    if any(path.is_symlink() for path in (app_dir / ".cyber-console-managed", app_dir / "src", app_dir / "src/cyber_console", app_dir / "config.example.json", app_dir / "themes")):
         print(f"Refusing symlinked cyber-console program files: {app_dir}", file=sys.stderr)
+        return 1
+    if (app_dir / "themes").is_dir() and any(path.is_symlink() for path in (app_dir / "themes").rglob("*")):
+        print(f"Refusing symlinks inside cyber-console themes: {app_dir / 'themes'}", file=sys.stderr)
         return 1
     if command_path.is_symlink() or (command_path.exists() and
             (not command_path.is_file() or "# cyber-console-managed-command" not in command_path.read_text(encoding="utf-8", errors="replace"))):
         print(f"Refusing to replace an unowned command or symlink: {command_path}", file=sys.stderr)
         return 1
-    if config_file.parent.is_symlink() or config_file.is_symlink() or (config_file.exists() and not config_file.is_file()):
+    theme_file = config_file.parent / "theme"
+    if config_file.parent.is_symlink() or config_file.is_symlink() or (config_file.exists() and not config_file.is_file()) or theme_file.is_symlink() or (theme_file.exists() and not theme_file.is_file()):
         print(f"Refusing unsafe configuration destination: {config_file}", file=sys.stderr)
         return 1
 
@@ -45,7 +49,7 @@ def main() -> int:
         return 1
 
     template_path = source / "config.example.json"
-    if not template_path.is_file() or not (source / "src/cyber_console/cli.py").is_file():
+    if not template_path.is_file() or not (source / "src/cyber_console/cli.py").is_file() or not (source / "themes").is_dir():
         print("The cyber-console source files are incomplete.", file=sys.stderr)
         return 1
     template = json.loads(template_path.read_text(encoding="utf-8"))
@@ -73,6 +77,16 @@ def main() -> int:
     if not config_file.exists():
         config_file.write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
         config_file.chmod(0o600)
+    if not theme_file.exists():
+        shared_theme = config_file.parent.parent / "cyber-ware/theme"
+        try:
+            selected = shared_theme.read_text(encoding="utf-8").splitlines()[0].strip()
+        except (OSError, IndexError):
+            selected = "synthwave"
+        if selected not in ("synthwave", "greenline", "husky"):
+            selected = "synthwave"
+        theme_file.write_text(selected + "\n", encoding="utf-8")
+        theme_file.chmod(0o600)
 
     stage = app_dir.with_name(f".{app_dir.name}.stage-{os.getpid()}")
     if stage.exists() or stage.is_symlink():
@@ -82,6 +96,7 @@ def main() -> int:
         (stage / "src").mkdir(parents=True)
         shutil.copytree(source / "src/cyber_console", stage / "src/cyber_console")
         shutil.copy2(template_path, stage / "config.example.json")
+        shutil.copytree(source / "themes", stage / "themes")
         (stage / ".cyber-console-managed").write_text("managed by cyber-console installer\n", encoding="utf-8")
         if app_dir.exists():
             app_src = app_dir / "src"
@@ -98,6 +113,7 @@ def main() -> int:
                 raise
             if not (app_dir / "config.example.json").exists():
                 (stage / "config.example.json").replace(app_dir / "config.example.json")
+            shutil.copytree(stage / "themes", app_dir / "themes", dirs_exist_ok=True)
             if not (app_dir / ".cyber-console-managed").exists():
                 (stage / ".cyber-console-managed").replace(app_dir / ".cyber-console-managed")
             if previous.exists():

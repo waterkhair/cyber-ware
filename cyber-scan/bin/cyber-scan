@@ -7,12 +7,49 @@ app_dir=$(cd -- "$(dirname -- "$resolved_script")/.." && pwd)
 usage() {
     cat <<'EOF'
 Usage: cyber-scan
+       cyber-scan --theme [synthwave|greenline|husky]
        cyber-scan --check
        cyber-scan --help
        cyber-scan --uninstall
 
 Select a screen region with slurp, capture it with grim, then open it in swappy.
 EOF
+}
+
+theme_file=${XDG_CONFIG_HOME:-"$HOME/.config"}/cyber-scan/theme
+theme=${CYBER_WARE_THEME:-}
+if [[ -z "$theme" && -f "$theme_file" ]]; then
+    IFS= read -r theme < "$theme_file" || theme=
+fi
+if [[ -z "$theme" && -f "${XDG_CONFIG_HOME:-$HOME/.config}/cyber-ware/theme" ]]; then
+    IFS= read -r theme < "${XDG_CONFIG_HOME:-$HOME/.config}/cyber-ware/theme" || theme=
+fi
+theme=${theme:-synthwave}
+
+set_theme() {
+    local name=$1 config_dir=${XDG_CONFIG_HOME:-"$HOME/.config"} temporary
+    case "$name" in synthwave|greenline|husky) ;; *)
+        printf 'Unknown theme %s; choose synthwave, greenline, or husky.\n' "$name" >&2
+        return 2
+        ;;
+    esac
+    [[ ! -L "$config_dir" && ! -L "$config_dir/cyber-scan" && ! -L "$theme_file" ]] || {
+        printf 'Refusing symlinked cyber-scan theme path: %s\n' "$theme_file" >&2
+        return 1
+    }
+    mkdir -p -- "$config_dir/cyber-scan"
+    temporary=$(mktemp "$config_dir/cyber-scan/.theme.XXXXXX")
+    printf '%s\n' "$name" > "$temporary"
+    mv -f -- "$temporary" "$theme_file"
+    printf 'Theme set to %s; it will apply to the next screenshot selection.\n' "$name"
+}
+
+theme_colors() {
+    case "$theme" in
+        greenline) printf '%s\n' '-b' '#080d09cc' '-c' '#65c96dff' '-s' '#a0f29622' '-B' '#101a12ff' ;;
+        husky) printf '%s\n' '-b' '#080c0fcc' '-c' '#63b9d2ff' '-s' '#7ed9c222' '-B' '#11191eff' ;;
+        *) printf '%s\n' '-b' '#0b0f14cc' '-c' '#00e5ffff' '-s' '#8b5cff22' '-B' '#131b26ff' ;;
+    esac
 }
 
 check_requirements() {
@@ -52,6 +89,15 @@ uninstall() {
 }
 
 case "${1:-}" in
+    --theme)
+        (($# <= 2)) || { usage >&2; exit 2; }
+        if (($# == 1)); then
+            printf 'Current theme: %s (available: synthwave, greenline, husky)\n' "$theme"
+        else
+            set_theme "$2"
+        fi
+        exit
+        ;;
     --help|-h)
         (($# <= 1)) || { usage >&2; exit 2; }
         usage
@@ -77,7 +123,8 @@ case "${1:-}" in
 esac
 
 check_requirements >/dev/null
-if ! geometry=$(slurp); then
+mapfile -t slurp_theme_args < <(theme_colors)
+if ! geometry=$(slurp "${slurp_theme_args[@]}"); then
     exit 0
 fi
 [[ -n "$geometry" ]] || exit 0
