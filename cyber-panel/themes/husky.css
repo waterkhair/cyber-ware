@@ -1,4 +1,4 @@
-/* husky: monochrome surfaces, with cool blue and green state accents. */
+/* husky: black surfaces, white text, and grayscale state highlights. */
 * {
   border: none;
   border-radius: 9px;
@@ -20,8 +20,8 @@ window#waybar { background: transparent; color: #e4eaec; }
   color: #d7e0e3;
   padding: 0 13px;
   margin: 5px 4px;
-  background: rgba(12, 17, 20, 0.96);
-  border: 1px solid rgba(102, 137, 151, 0.30);
+  background: rgba(12, 12, 12, 0.96);
+  border: 1px solid rgba(190, 190, 190, 0.30);
 }
 
 #workspaces button { color: #aab8bd; padding: 0 10px; margin: 5px 2px; }
@@ -32,36 +32,36 @@ window#waybar { background: transparent; color: #e4eaec; }
 #clock:hover,
 #tray:hover {
   color: #ffffff;
-  background: rgba(23, 34, 40, 0.98);
-  border-color: rgba(99, 198, 216, 0.70);
+  background: rgba(50, 50, 50, 0.98);
+  border-color: rgba(230, 230, 230, 0.80);
 }
 
 #workspaces button.active {
-  color: #071014;
-  background: #7ed9c2;
-  border-color: #73c8e7;
+  color: #000000;
+  background: #ffffff;
+  border-color: #bdbdbd;
 }
-#workspaces button.active:hover { background: #a3e9d4; }
-#workspaces button.urgent { color: #071014; background: #75bce0; border-color: #a6d8f0; }
-#window { padding-left: 16px; padding-right: 16px; border-color: rgba(99, 198, 216, 0.52); }
-#mpris { font-size: 11px; color: #8fcbe5; }
-#mpris.playing { color: #91e0c0; border-color: rgba(126, 217, 194, 0.70); }
+#workspaces button.active:hover { background: #dddddd; }
+#workspaces button.urgent { color: #000000; background: #bdbdbd; border-color: #ffffff; }
+#window { padding-left: 16px; padding-right: 16px; border-color: rgba(210, 210, 210, 0.52); }
+#mpris { font-size: 11px; color: #cccccc; }
+#mpris.playing { color: #ffffff; border-color: rgba(230, 230, 230, 0.70); }
 #mpris.paused,
 #pulseaudio.muted,
 #network.disconnected { color: #93a2a9; border-color: rgba(116, 138, 148, 0.62); }
 #network.wifi,
 #network.ethernet,
 #pulseaudio,
-#clock { color: #c4e6f1; border-color: rgba(99, 179, 211, 0.58); }
+#clock { color: #e0e0e0; border-color: rgba(190, 190, 190, 0.58); }
 #network { min-width: 20px; padding-left: 7px; padding-right: 13px; }
 #tray { padding-left: 10px; padding-right: 10px; }
 #tray > .passive { -gtk-icon-effect: dim; }
-#tray > .needs-attention { -gtk-icon-effect: highlight; background: rgba(126, 217, 194, 0.14); }
+#tray > .needs-attention { -gtk-icon-effect: highlight; background: rgba(255, 255, 255, 0.14); }
 
 tooltip {
   color: #e4eaec;
-  background: rgba(8, 12, 15, 0.98);
-  border: 1px solid rgba(99, 198, 216, 0.72);
+  background: rgba(0, 0, 0, 0.98);
+  border: 1px solid rgba(230, 230, 230, 0.72);
   border-radius: 8px;
 }
 tooltip label { padding: 7px 9px; }

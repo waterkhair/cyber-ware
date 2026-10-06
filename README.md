@@ -86,7 +86,7 @@ The installer also provides one shared theme command:
 cyber-ware --theme                 # show the selected theme
 cyber-ware --theme greenline       # switch the desktop to greenline
 cyber-ware --theme synthwave       # switch the desktop to synthwave
-cyber-ware --theme husky           # switch to monochrome with green/blue accents
+cyber-ware --theme husky           # switch to black and white with grayscale accents
 ```
 
 The shared theme is saved in `~/.config/cyber-ware/theme` (or under

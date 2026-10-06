@@ -117,7 +117,8 @@ not performed. The `class` should be unique per tool and must match the
 Hyprland rule you use for that window.
 
 `cyber-console --theme` selects the Ghostty palette for future floating
-terminal windows. It supports `synthwave`, `greenline`, and `husky`; the
+terminal windows. It supports `synthwave`, `greenline`, and `husky` (black and
+white with grayscale highlights); the
 umbrella `cyber-ware --theme NAME` keeps this selection in sync with the rest
 of the desktop. Theme files are stored with cyber-console's app files, so it
 does not edit or replace your main Ghostty configuration.

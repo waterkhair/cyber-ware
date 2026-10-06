@@ -39,7 +39,7 @@ user-local paths. Ensure `~/.local/bin` is on `PATH`.
 cyber-scan          # select a region, capture it, and open Swappy
 cyber-scan --check  # check dependencies and Wayland environment
 cyber-scan --theme  # show current accent theme
-cyber-scan --theme husky  # use blue/green selection accents
+cyber-scan --theme husky  # use black and white selection accents
 cyber-scan --help
 cyber-scan --uninstall
 ```

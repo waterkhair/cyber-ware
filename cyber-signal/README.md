@@ -71,7 +71,7 @@ cyber-signal --check disk            # check configured mounts and alert on thre
 cyber-signal --theme                 # show selected theme and Mako config path
 cyber-signal --theme greenline       # select terminal phosphor-green
 cyber-signal --theme synthwave       # select muted purple/pink synthwave
-cyber-signal --theme husky           # monochrome with green/blue accents
+cyber-signal --theme husky           # black and white with grayscale highlights
 cyber-signal --disable               # stop and disable monitoring
 cyber-signal --help
 ```

@@ -59,7 +59,7 @@ cyber-deck --clipboard disable     # disable clipboard history collection
 cyber-deck --theme                 # show the selected theme
 cyber-deck --theme greenline       # switch to greenline
 cyber-deck --theme synthwave       # switch to synthwave
-cyber-deck --theme husky           # monochrome with green/blue accents
+cyber-deck --theme husky           # black and white with grayscale highlights
 cyber-deck --check                 # validate both Fuzzel theme files
 cyber-deck --uninstall             # remove program; keep theme files
 cyber-deck --uninstall --purge     # confirm, then remove theme files too

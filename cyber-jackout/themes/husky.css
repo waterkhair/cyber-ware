@@ -1,14 +1,14 @@
-/* husky palette: dark monochrome power menu with quiet green/blue focus. */
+/* husky palette: black-and-white power menu. */
 * { background-image: none; box-shadow: none; }
 
-window { background-color: rgba(8, 12, 15, 0.94); }
+window { background-color: rgba(0, 0, 0, 0.96); }
 
 button {
   margin: 6px;
-  border: 1px solid rgba(116, 151, 164, 0.34);
+  border: 1px solid rgba(190, 190, 190, 0.38);
   border-radius: 12px;
-  color: #e4eaec;
-  background-color: rgba(17, 25, 30, 0.98);
+  color: #eeeeee;
+  background-color: rgba(16, 16, 16, 0.98);
   background-repeat: no-repeat;
   background-position: center 35%;
   background-size: 28%;
@@ -21,22 +21,22 @@ button:hover,
 button:focus,
 button:active {
   color: #ffffff;
-  background-color: rgba(54, 111, 129, 0.42);
-  border-color: #75bce0;
+  background-color: rgba(65, 65, 65, 0.90);
+  border-color: #ffffff;
   outline-style: solid;
   outline-width: 2px;
-  outline-color: rgba(126, 217, 194, 0.38);
+  outline-color: rgba(255, 255, 255, 0.35);
 }
 
 button#logout:hover,
 button#reboot:hover,
 button#suspend:hover,
-button#lock:hover { background-color: #24434e; border-color: #7ed9c2; }
+button#lock:hover { background-color: #333333; border-color: #ffffff; }
 
 button#shutdown:hover {
-  color: #071014;
-  background-color: #75bce0;
-  border-color: #a6d8f0;
+  color: #000000;
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 
 #lock { background-image: image(url("@ICON_DIR@/lock.svg")); }

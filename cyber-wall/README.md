@@ -53,7 +53,7 @@ cyber-wall --set ~/Videos/wall.mp4          # apply a video
 cyber-wall --set --restore                 # restore the last choice
 cyber-wall --sync-lock-wallpaper            # sync it to Hyprlock
 cyber-wall --theme                         # show current and available themes
-cyber-wall --theme husky                   # monochrome with green/blue accents
+cyber-wall --theme husky                   # black and white with grayscale highlights
 cyber-wall --uninstall                     # uninstall, keep personal data
 cyber-wall --uninstall --purge             # confirm, then remove saved data too
 ```
@@ -104,8 +104,8 @@ asks you to review it first.
 The default visual template is `synthwave`. The optional `greenline` theme is a
 monochrome terminal look with classic phosphor-green text and accents on deep
 near-black surfaces. It has no glow effects; wallpaper thumbnails remain
-ordinary images. `husky` uses monochrome surfaces with restrained mint and blue
-accents. Themes are plain GTK CSS, with stylesheets in
+ordinary images. `husky` uses black surfaces, white text, and grayscale
+highlights. Themes are plain GTK CSS, with stylesheets in
 `src/cyber_wall/themes/`, separate from picker behavior.
 
 Switch themes with `cyber-wall --theme greenline`, `cyber-wall --theme synthwave`,

@@ -47,7 +47,7 @@ set_theme() {
 theme_colors() {
     case "$theme" in
         greenline) printf '%s\n' '-b' '#080d09cc' '-c' '#65c96dff' '-s' '#a0f29622' '-B' '#101a12ff' ;;
-        husky) printf '%s\n' '-b' '#080c0fcc' '-c' '#63b9d2ff' '-s' '#7ed9c222' '-B' '#11191eff' ;;
+        husky) printf '%s\n' '-b' '#000000cc' '-c' '#ffffffff' '-s' '#ffffff22' '-B' '#111111ff' ;;
         *) printf '%s\n' '-b' '#0b0f14cc' '-c' '#00e5ffff' '-s' '#8b5cff22' '-B' '#131b26ff' ;;
     esac
 }

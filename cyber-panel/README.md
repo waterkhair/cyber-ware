@@ -4,7 +4,7 @@
 Hyprland. It provides a compact status bar with workspace pills, active-window
 title, media controls, system tray, network state, volume, and clock. It ships
 three styles: `synthwave` (muted violet/cyan), `greenline` (phosphor green on
-near-black), and `husky` (monochrome with green and blue accents).
+near-black), and `husky` (black and white with grayscale highlights).
 
 The package only manages its own Waybar configuration and stylesheet. It does
 not install system packages, edit Hyprland config, add key bindings, or start
@@ -76,7 +76,7 @@ cyber-panel                         # show install and theme status
 cyber-panel --theme                 # show selected and available themes
 cyber-panel --theme greenline       # switch styles and reload running Waybar
 cyber-panel --theme synthwave       # switch back to synthwave
-cyber-panel --theme husky           # monochrome with green/blue accents
+cyber-panel --theme husky           # black and white with grayscale highlights
 cyber-panel --uninstall             # restore the original Waybar files
 cyber-panel --uninstall --purge     # restore, then remove settings and recovery copies
 cyber-panel --help

@@ -1,8 +1,8 @@
 # cyber-signal theme: husky
 # Dark neutral notifications with cool blue borders and a soft green highlight.
-background-color=#0b1114
-text-color=#e4eaec
-border-color=#63b9d2
+background-color=#080808
+text-color=#eeeeee
+border-color=#cccccc
 border-size=2
 border-radius=10
 padding=12
@@ -10,9 +10,9 @@ margin=8
 default-timeout=8000
 
 [app-name="cyber-signal"]
-background-color=#0b1114
-text-color=#e4eaec
-border-color=#63b9d2
+background-color=#080808
+text-color=#eeeeee
+border-color=#cccccc
 border-size=2
 border-radius=10
 padding=12
@@ -20,9 +20,9 @@ margin=8
 default-timeout=8000
 
 [app-name="cyber-signal" urgency=critical]
-background-color=#11191e
+background-color=#111111
 text-color=#ffffff
-border-color=#7ed9c2
+border-color=#ffffff
 border-size=2
 border-radius=10
 padding=12
