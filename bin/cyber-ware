@@ -6,12 +6,33 @@ usage() {
     cat <<'EOF'
 Usage:
   cyber-ware --theme [synthwave|greenline|husky]
+  cyber-ware --theme-picker
   cyber-ware --uninstall
   cyber-ware --help
 
-Show or switch the shared cyber-ware theme. Theme-aware installed components
-are updated, and Hyprland is reloaded when available.
+Show or switch the shared cyber-ware theme. Use --theme-picker to choose from
+a Fuzzel menu. Theme-aware installed components are updated, and Hyprland is
+reloaded when available.
 EOF
+}
+
+theme_picker() {
+    if ! command -v fuzzel >/dev/null 2>&1; then
+        printf '%s\n' 'Fuzzel is required for the theme picker.' >&2
+        return 1
+    fi
+    selected_theme=$(current_theme)
+    deck_config=$config_home/cyber-deck/themes/$selected_theme.ini
+    if [ -f "$deck_config" ]; then
+        selected=$(printf '%s\n' synthwave greenline husky | \
+            fuzzel --dmenu --config "$deck_config" --prompt="Theme [$selected_theme] > ") || return 0
+    else
+        selected=$(printf '%s\n' synthwave greenline husky | \
+            fuzzel --dmenu --prompt="Theme [$selected_theme] > ") || return 0
+    fi
+    case "$selected" in synthwave|greenline|husky) exec "$0" --theme "$selected" ;;
+        *) printf '%s\n' 'No theme selected.' >&2; return 1 ;;
+    esac
 }
 
 config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
@@ -134,6 +155,11 @@ case "${1:-}" in
             2) theme=$2 ;;
             *) printf '%s\n' 'Use: cyber-ware --theme [synthwave|greenline|husky]' >&2; exit 2 ;;
         esac
+        ;;
+    --theme-picker)
+        [ "$#" -eq 1 ] || { printf '%s\n' 'Use cyber-ware --theme-picker by itself.' >&2; exit 2; }
+        theme_picker
+        exit $?
         ;;
     --uninstall)
         [ "$#" -eq 1 ] || { printf '%s\n' 'Use cyber-ware --uninstall by itself.' >&2; exit 2; }

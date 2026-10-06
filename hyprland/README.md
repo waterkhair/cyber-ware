@@ -21,6 +21,10 @@ the same selection to installed theme-aware cyber-ware components. The shared
 selection is stored as plain text at `~/.config/cyber-ware/theme` (or under
 `$XDG_CONFIG_HOME`).
 
+Run `cyber-ware --theme-picker` or press `Ctrl+Super+Alt+T` to choose a theme
+in a Fuzzel menu styled with the current cyber-deck palette. `Super+Space`
+continues to open the application launcher.
+
 `cyber-ware --uninstall` restores the Hyprland files saved before installation
 and removes the shared command. It does not uninstall standalone components;
 use each component's own uninstall command for that.

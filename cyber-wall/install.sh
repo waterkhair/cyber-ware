@@ -36,6 +36,10 @@ if [ "$missing_required" -ne 0 ]; then
     printf '%s\n' 'cyber-wall was not installed. See the README Requirements section for dependency details.' >&2
     exit 1
 fi
+command -v cmp >/dev/null 2>&1 || {
+    printf '%s\n' 'Missing required installer command: cmp.' >&2
+    exit 1
+}
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
     printf '%s\n' 'Optional dependency ffmpeg is missing: video preview thumbnails will be unavailable.' >&2
@@ -83,6 +87,32 @@ if [ -z "$project_dir" ] || [ ! -f "$project_dir/src/cyber_wall/picker.py" ]; th
     fi
 fi
 
+wallpaper_dir=$HOME/Pictures/Wallpapers
+wallpaper_source_dir=$project_dir/assets/wallpapers
+wallpaper_files='calm-water.png cozy-husky-bay.png cozy-husky-coding.png cozy-husky-pool.png cyberpunk-husky.png'
+if [ ! -d "$wallpaper_source_dir" ]; then
+    printf 'Bundled wallpaper source directory is missing: %s\n' "$wallpaper_source_dir" >&2
+    exit 1
+fi
+if [ -L "$HOME/Pictures" ] || [ -L "$wallpaper_dir" ] || \
+    { [ -e "$wallpaper_dir" ] && [ ! -d "$wallpaper_dir" ]; }; then
+    printf 'Refusing an unsafe wallpaper destination: %s\n' "$wallpaper_dir" >&2
+    exit 1
+fi
+for wallpaper in $wallpaper_files; do
+    source_file=$wallpaper_source_dir/$wallpaper
+    destination_file=$wallpaper_dir/$wallpaper
+    [ -f "$source_file" ] || { printf 'Bundled wallpaper is missing: %s\n' "$source_file" >&2; exit 1; }
+    if [ -L "$destination_file" ] || { [ -e "$destination_file" ] && [ ! -f "$destination_file" ]; }; then
+        printf 'Refusing an unsafe wallpaper file: %s\n' "$destination_file" >&2
+        exit 1
+    fi
+    if [ -f "$destination_file" ] && ! cmp -s -- "$source_file" "$destination_file"; then
+        printf 'A different file already exists at %s; move it before installing cyber-wall.\n' "$destination_file" >&2
+        exit 1
+    fi
+done
+
 mkdir -p "$command_dir" "$(dirname -- "$app_dir")"
 stage_dir=$(mktemp -d "$(dirname -- "$app_dir")/.cyber-wall-stage.XXXXXX")
 cp -R "$project_dir/src/cyber_wall" "$stage_dir/cyber_wall"
@@ -108,6 +138,13 @@ if [ -L "$config_dir/config.json" ] || { [ -e "$config_dir/config.json" ] && [ !
     exit 1
 fi
 mkdir -p "$config_dir"
+mkdir -p "$wallpaper_dir"
+for wallpaper in $wallpaper_files; do
+    destination_file=$wallpaper_dir/$wallpaper
+    if [ ! -e "$destination_file" ]; then
+        install -m 644 "$wallpaper_source_dir/$wallpaper" "$destination_file"
+    fi
+done
 if [ ! -e "$config_dir/config.json" ]; then
     install -m 600 "$project_dir/config.example.json" "$config_dir/config.json"
 fi
@@ -125,5 +162,6 @@ fi
 
 printf 'Installed cyber-wall commands in %s/bin\n' "$prefix"
 printf 'Configuration: %s/config.json\n' "$config_dir"
+printf 'Bundled wallpapers: %s\n' "$wallpaper_dir"
 printf '%s\n' 'Uninstall with cyber-wall --uninstall; add --purge only if you also want to remove cyber-wall settings and saved data.'
 printf '%s\n' 'Make sure the install bin directory is on PATH. Start with: cyber-wall'

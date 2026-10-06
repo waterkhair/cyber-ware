@@ -105,6 +105,13 @@ def load_config() -> dict[str, Any]:
         isinstance(item, str) for item in result["directories"]
     ):
         raise ValueError("config 'directories' must be an array of path strings")
+    default_dir = Path.home() / "Pictures/Wallpapers"
+    if not any(expand_path(item) == default_dir for item in result["directories"]):
+        result["directories"] = [str(default_dir), *result["directories"]]
+    if result.get("default_wallpaper") is None:
+        installed_default = default_dir / "cyberpunk-husky.png"
+        if installed_default.is_file():
+            result["default_wallpaper"] = str(installed_default)
     if not isinstance(result.get("mpvpaper_options"), list) or not all(
         isinstance(item, str) for item in result["mpvpaper_options"]
     ):

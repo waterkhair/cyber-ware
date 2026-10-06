@@ -34,9 +34,22 @@ cd cyber-ware/cyber-wall
 ```
 
 The installer puts commands in `~/.local/bin`, application code under
-`~/.local/share/cyber-wall`, and creates `~/.config/cyber-wall/config.json`
-only if it does not already exist. Set `PREFIX` to choose another command
-directory. Ensure that directory is on your `PATH`.
+`~/.local/share/cyber-wall`, copies default wallpapers to
+`~/Pictures/Wallpapers` (creating it if needed), and creates
+`~/.config/cyber-wall/config.json` only if it does not already exist. Set
+`PREFIX` to choose another command directory and ensure it is on your `PATH`.
+
+The installer copies `calm-water.png`, `cozy-husky-bay.png`,
+`cozy-husky-coding.png`, `cozy-husky-pool.png`, and `cyberpunk-husky.png`
+without conversion.
+Identical files are left in place; if a different file already has one of
+these names, installation stops rather than overwriting it. On a fresh setup
+with no saved selection or custom default, `cyberpunk-husky.png` is the default
+wallpaper and appears in the picker. Existing saved selections and explicit
+`default_wallpaper` values take precedence. Before a wallpaper has been
+applied, `cyber-wall --sync-lock-wallpaper` uses the same default for Hyprlock.
+These images are treated as personal files and remain in
+`~/Pictures/Wallpapers` after cyber-wall is uninstalled.
 
 The GitHub one-line installer requires the parent repository to be public and
 have a commit on its `main` branch. It fetches the parent archive and installs

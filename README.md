@@ -9,7 +9,8 @@ components they want.
 ## Components
 
 - [`cyber-wall/`](cyber-wall/README.md) — GTK image/video wallpaper picker for
-  Hyprland, using `mpvpaper`.
+  Hyprland, using `mpvpaper`, with four default images installed in
+  `~/Pictures/Wallpapers` and `cyberpunk-husky.png` as the first-run wallpaper.
 - [`cyber-signal/`](cyber-signal/README.md) — user-scoped system status
   notifications with Mako themes and optional systemd user timers.
 - [`cyber-panel/`](cyber-panel/README.md) — a themed Waybar setup for Hyprland,
@@ -84,10 +85,14 @@ The installer also provides one shared theme command:
 
 ```sh
 cyber-ware --theme                 # show the selected theme
+cyber-ware --theme-picker          # choose a theme with Fuzzel
 cyber-ware --theme greenline       # switch the desktop to greenline
 cyber-ware --theme synthwave       # switch the desktop to synthwave
 cyber-ware --theme husky           # switch to black and white with grayscale accents
 ```
+
+`Ctrl+Super+Alt+T` opens the theme picker; `Super+Space` remains the app
+launcher.
 
 The shared theme is saved in `~/.config/cyber-ware/theme` (or under
 `$XDG_CONFIG_HOME`). Hyprland reads it for active/inactive window and group

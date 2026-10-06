@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from .config import state_dir
+from .config import load_config, state_dir
 
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".mov", ".avi", ".m4v", ".gif"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
@@ -149,9 +149,13 @@ def sync_lock_wallpaper(config_path: Path | None = None) -> Path:
     if include_path.is_symlink() or (include_path.exists() and not include_path.is_file()):
         raise RuntimeError(f"Refusing unsafe Hyprlock wallpaper include: {include_path}")
 
-    if not source_path.is_file():
-        raise RuntimeError("no saved cyber-wall selection exists yet; set a wallpaper first")
-    source = Path(source_path.read_text(encoding="utf-8").strip()).expanduser().resolve(strict=True)
+    if source_path.is_file():
+        selected = source_path.read_text(encoding="utf-8").strip()
+    else:
+        selected = load_config().get("default_wallpaper") or ""
+    if not selected:
+        raise RuntimeError("no saved cyber-wall selection or configured default wallpaper exists")
+    source = Path(selected).expanduser().resolve(strict=True)
     if config_path.is_symlink() or not config_path.is_file():
         raise RuntimeError(f"Hyprlock config is missing or unsafe: {config_path}")
     sync_dir.mkdir(parents=True, exist_ok=True)
