@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+# cyber-wave-managed-command
+import os
+import sys
+from pathlib import Path
+
+app_data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+sys.path.insert(0, str(app_data / "cyber-wave/src"))
+os.environ.setdefault("CYBER_WAVE_COMMAND", str(Path(__file__).resolve()))
+from cyber_wave.cli import main
+
+raise SystemExit(main())

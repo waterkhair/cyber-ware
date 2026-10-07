@@ -1,0 +1,21 @@
+#cyber-wave {
+  background: #070c08;
+  color: #d9f4d8;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+}
+#shell { padding: 24px; }
+#title { color: #9bff9b; font-size: 18px; font-weight: 800; letter-spacing: 1px; padding-bottom: 4px; }
+#search, #station-form entry { background: #101a12; color: #d9f4d8; border: 1px solid #62d982; border-radius: 10px; padding: 11px 14px; }
+#search:focus, #station-form entry:focus { border-color: #a4ffad; box-shadow: 0 0 0 2px alpha(#a4ffad, 0.22); }
+#station-scroll { background: #0b120c; border: 1px solid #263a2a; border-radius: 10px; padding: 6px; }
+.station-row { background: transparent; color: #c6ddc7; border-radius: 7px; padding: 8px 10px; }
+.station-row:selected { background: #1c3321; color: #f1fff0; }
+.station-row.playing { color: #a4ffad; font-weight: 700; }
+#play-marker { color: #79e995; font-weight: 900; }
+#station-state { color: #a4ffad; font-size: 11px; font-weight: 800; }
+#station-form { background: #101a12; border: 1px solid #62d982; border-radius: 10px; padding: 12px; }
+button { background: #18251a; color: #d9f4d8; border: 1px solid #344b38; border-radius: 8px; padding: 8px 14px; }
+button:hover, button.accent { background: #24462c; border-color: #9bff9b; color: #fff; }
+#notice { color: #a4ffad; min-height: 18px; }
+#hint { color: #899f8c; font-size: 12px; }

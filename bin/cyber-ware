@@ -189,7 +189,7 @@ trap - EXIT HUP INT TERM
 printf 'Shared theme set to %s.\n' "$theme"
 
 failures=
-for component in cyber-wall cyber-signal cyber-panel cyber-jackout cyber-deck cyber-console cyber-scan; do
+for component in cyber-wall cyber-signal cyber-panel cyber-jackout cyber-deck cyber-console cyber-scan cyber-wave; do
     configured_bin=$(sed -n '1p' "$config_home/cyber-ware/bin-path" 2>/dev/null || true)
     component_command=${configured_bin:-"${PREFIX:-$HOME/.local}/bin"}/$component
     if [ -x "$component_command" ] || command -v "$component" >/dev/null 2>&1; then

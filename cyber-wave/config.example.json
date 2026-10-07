@@ -1,0 +1,9 @@
+{
+  "theme": "synthwave",
+  "stations": [
+    {
+      "name": "Esoterica Radio S3",
+      "url": "https://esoterica.servemp3.com:444/listen/darkbasshouse_cyberpunk_hybridtrap/radio.mp3"
+    }
+  ]
+}

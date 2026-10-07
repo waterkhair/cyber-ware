@@ -25,6 +25,8 @@ components they want.
   grim, slurp, and swappy.
 - [`cyber-deck/`](cyber-deck/README.md) — themed Fuzzel application launcher
   with a Super+Space toggle command.
+- [`cyber-wave/`](cyber-wave/README.md) — persistent floating radio-station
+  picker with `mpv` playback and cyber-ware themes.
 - [`hyprland/`](hyprland/README.md) — modular Lua configuration and setup
   guidance for integrating the cyber-ware components.
 
@@ -98,7 +100,7 @@ The shared theme is saved in `~/.config/cyber-ware/theme` (or under
 `$XDG_CONFIG_HOME`). Hyprland reads it for active/inactive window and group
 borders. The command also updates installed `cyber-wall`, `cyber-signal`,
 `cyber-panel`, `cyber-jackout`, `cyber-deck`, `cyber-console`, and
-`cyber-scan`, then reloads Hyprland.
+`cyber-scan`, and `cyber-wave`, then reloads Hyprland.
 Missing components are skipped; components installed later inherit the saved
 theme. `synthwave` is the default when no shared selection exists.
 

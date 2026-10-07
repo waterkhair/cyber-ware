@@ -94,7 +94,7 @@ for file in hyprland/hyprland.lua hyprland/appearance.lua hyprland/windows.lua \
     hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware; do
     [ -f "$source_dir/$file" ] || { printf 'Required config file is missing: %s\n' "$file" >&2; exit 1; }
 done
-for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan cyber-deck; do
+for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan cyber-deck cyber-wave; do
     [ -f "$source_dir/$component/install.sh" ] || {
         printf 'Component installer is missing: %s/install.sh\n' "$component" >&2
         exit 1
@@ -110,7 +110,7 @@ if [ "$mode" = prompt ] && [ "$prompt_source" = none ]; then
     mode=none
 fi
 selected_components=
-for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-jackout cyber-scan cyber-deck; do
+for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-jackout cyber-scan cyber-deck cyber-wave; do
     if [ "$mode" = all ]; then answer=y
     elif [ "$mode" = none ]; then answer=n
     else
@@ -241,6 +241,7 @@ for component in $selected_components; do
         cyber-jackout) required='bash cat chmod cp cut dirname flock hyprctl logger mkdir mktemp mv notify-send pgrep readlink rm sed sha256sum sleep systemctl systemd-inhibit systemd-run timeout' ;;
         cyber-scan) required='grim slurp swappy' ;;
         cyber-deck) required='python3 fuzzel' ;;
+        cyber-wave) required='python3 ghostty hyprctl mpv' ;;
     esac
     for dependency in $required; do
         command -v "$dependency" >/dev/null 2>&1 || missing_selected="$missing_selected $dependency($component)"
@@ -395,7 +396,7 @@ install_component() {
     esac
 }
 
-for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-jackout cyber-scan cyber-deck; do
+for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-jackout cyber-scan cyber-deck cyber-wave; do
     install_component "$component"
 done
 

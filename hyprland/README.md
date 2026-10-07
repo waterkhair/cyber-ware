@@ -72,8 +72,10 @@ Hyprland session environment if you install them elsewhere.
 
 Then install the desired cyber-ware components and required system programs.
 The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`,
-`cyber-jackout`, and `cyber-deck`. Super+V is registered when cyber-deck's
-optional clipboard history feature is enabled.
+`cyber-jackout`, `cyber-deck`, and `cyber-wave` when installed. `Ctrl+Super+R`
+toggles the cyber-wave picker on the `Radio` special workspace; it hides rather
+than closes the window, and its mpv stream continues playing. Super+V is
+registered when cyber-deck's optional clipboard history feature is enabled.
 The startup module also launches Waybar, Mako, OpenDeck, Discord, Steam, and
 other configured applications when present. The optional cyber-jackout
 lock/idle integration installs a matching Hyprlock theme and a 5-minute lock,

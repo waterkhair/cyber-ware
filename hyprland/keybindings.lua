@@ -60,6 +60,7 @@ if zen_browser then
 end
 bind_local_command(navMod, "I", "cyber-console", "impala", "Toggle floating Impala")
 bind_local_command(navMod, "Y", "cyber-console", "yazi", "Toggle floating Yazi")
+bind_local_command(navMod, "R", "cyber-wave", nil, "Toggle internet radio picker")
 
 hl.bind(navMod .. " + D", function() hl.dispatch(hl.dsp.focus({ workspace = "1" })) end, { description = "Focus Deck" })
 hl.bind(navMod .. " + C", function() hl.dispatch(hl.dsp.workspace.toggle_special("Comms")) end, { description = "Toggle Comms" })
