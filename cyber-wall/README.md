@@ -88,13 +88,17 @@ Edit `~/.config/cyber-wall/config.json`. The installer never overwrites it.
   "default_wallpaper": null,
   "theme": "synthwave",
   "mpvpaper_options": [
-    "no-audio", "--quiet", "--msg-level=all=warn", "--loop-file=inf",
+    "no-audio", "--load-scripts=no", "--quiet", "--msg-level=all=warn", "--loop-file=inf",
     "--image-display-duration=inf", "--keep-open=yes", "--hwdec=auto"
   ],
   "preview_seek_seconds": 0.5,
   "preview_timeout_seconds": 8
 }
 ```
+
+The `--load-scripts=no` option keeps mpvpaper from loading global mpv scripts
+such as mpv-mpris. This prevents the wallpaper filename from appearing as a
+currently playing item in Waybar while leaving MPRIS enabled for other players.
 
 `output` accepts `"auto"` (focused Hyprland monitor), `"ALL"`, or an exact
 monitor name such as `"DP-1"`. `WALLPAPER_OUTPUT` overrides the config for one

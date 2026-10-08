@@ -17,6 +17,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config["directories"], DEFAULTS["directories"])
         self.assertEqual(config["output"], "auto")
         self.assertEqual(config["theme"], "synthwave")
+        self.assertIn("--load-scripts=no", config["mpvpaper_options"])
 
     def test_user_values_override_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

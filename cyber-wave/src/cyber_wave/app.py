@@ -58,6 +58,13 @@ def display_player_state(actual: dict, pending: dict | None, now: float, pending
     return actual, None
 
 
+def hide_picker() -> bool:
+    """Hide the persistent picker using the same special-workspace toggle as its shortcut."""
+    from .cli import _dispatch
+
+    return _dispatch("togglespecialworkspace", "Radio")
+
+
 class CyberWavePicker(Gtk.Application):
     def __init__(self, config: dict) -> None:
         super().__init__(
@@ -177,7 +184,7 @@ class CyberWavePicker(Gtk.Application):
         shell.append(self.notice)
 
         hint = Gtk.Label(
-            label="Ctrl+K/J move   •   Enter/Ctrl+Space play/stop   •   Ctrl+A add   •   Ctrl+D delete   •   Esc close"
+            label="Ctrl+K/J move   •   Enter/Ctrl+Space play/stop   •   Ctrl+A add   •   Ctrl+D delete   •   Esc hide"
         )
         hint.set_name("hint")
         hint.set_xalign(0)
@@ -239,7 +246,8 @@ class CyberWavePicker(Gtk.Application):
             self.search.set_text("")
             return True
         if action == "escape":
-            self.quit()
+            if not hide_picker():
+                self._set_notice("Could not hide the Radio workspace.")
             return True
         return False
 
@@ -403,6 +411,8 @@ class CyberWavePicker(Gtk.Application):
             self.notice.set_text(message)
 
     def _close_request(self, *_args) -> bool:
+        if hide_picker():
+            return True
         self.quit()
         return False
 

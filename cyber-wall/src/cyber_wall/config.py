@@ -19,6 +19,7 @@ DEFAULTS: dict[str, Any] = {
     "theme": "synthwave",
     "mpvpaper_options": [
         "no-audio",
+        "--load-scripts=no",
         "--quiet",
         "--msg-level=all=warn",
         "--loop-file=inf",

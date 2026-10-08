@@ -5,7 +5,7 @@ import gi
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk
 
-from cyber_wave.app import display_player_state, filter_stations, key_action
+from cyber_wave.app import display_player_state, filter_stations, hide_picker, key_action
 
 
 class AppTests(unittest.TestCase):
@@ -39,6 +39,13 @@ class AppTests(unittest.TestCase):
         self.assertEqual(key_action(Gdk.KEY_Escape, plain), "escape")
         self.assertEqual(key_action(Gdk.KEY_Down, plain), "down")
         self.assertEqual(key_action(Gdk.KEY_Up, plain), "up")
+
+    def test_escape_hide_uses_the_same_radio_workspace_toggle_as_shortcut(self):
+        from unittest.mock import patch
+
+        with patch("cyber_wave.cli._dispatch", return_value=True) as dispatch:
+            self.assertTrue(hide_picker())
+        dispatch.assert_called_once_with("togglespecialworkspace", "Radio")
 
     def test_pending_selection_displays_immediately_and_clears_on_confirmation(self):
         desired = {"url": "https://radio.example/second", "paused": False}
