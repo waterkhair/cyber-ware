@@ -6,10 +6,11 @@ window/workspace rules, session startup, and keybindings. Machine-specific
 monitor and GPU settings belong in `hyprland.local.lua`, not in the shared
 modules.
 
-The repository's top-level `install.sh` installs this configuration first,
-then asks whether to install each optional component. Use
+The repository's top-level `install.sh` collects component choices, installs
+their system packages with pacman, then installs this configuration and the
+selected components. Use
 `./install.sh --no-components` for only the config or `./install.sh --all` to
-select every component without prompts. The config conditionally registers
+select every component (sudo/pacman may still prompt). The config conditionally registers
 component shortcuts and startup commands when their executables are present.
 When upgrading an older modular config, the installer preserves existing
 `environment.lua` and `monitors.lua` modules by loading them from a newly
@@ -87,8 +88,10 @@ checks the capture backend before refreshing the portal frontend. It requires
 `xdg-desktop-portal`, `xdg-desktop-portal-hyprland`, and `xdg-desktop-portal-gtk`.
 OpenDeck, Discord, and Steam are checked and launched after recovery succeeds.
 This happens once per Hyprland session; config reloads do not restart portals or
-relaunch user applications. The installer reports missing optional
-integrations and does not install system packages.
+relaunch user applications. The umbrella installer installs base and selected
+component packages on CachyOS/Arch and enables the selected components' idle,
+clipboard, and notification integrations. Standalone installers only check
+dependencies. See the root README for package management and platform limits.
 
 Check the config and reload from an active Hyprland session:
 

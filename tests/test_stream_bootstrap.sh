@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+export CYBER_WARE_INSTALL_PACKAGES=0
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/cyber-ware-stream-test.XXXXXX")
 trap 'rm -rf -- "$tmp"' EXIT HUP INT TERM

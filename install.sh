@@ -52,6 +52,10 @@ trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 
 mode=prompt
+if [ "$(id -u)" -eq 0 ]; then
+    printf '%s\n' 'Run cyber-ware as your regular desktop user; only package installation uses sudo.' >&2
+    exit 1
+fi
 case "${1:-}" in
     "") ;;
     --all) mode=all ;;
@@ -60,8 +64,8 @@ case "${1:-}" in
         cat <<'EOF'
 Usage: ./install.sh [--all | --no-components]
 
-Install the modular Hyprland configuration, then choose optional components.
-  --all            install every component without prompting
+Choose components, install their system packages, and configure the desktop.
+  --all            select every component (sudo/pacman may still prompt)
   --no-components  install only the Hyprland configuration
 EOF
         exit 0
@@ -91,7 +95,7 @@ else
 fi
 
 for file in hyprland/hyprland.lua hyprland/appearance.lua hyprland/windows.lua \
-    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware; do
+    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware packages/arch.sh packages/install.sh; do
     [ -f "$source_dir/$file" ] || { printf 'Required config file is missing: %s\n' "$file" >&2; exit 1; }
 done
 for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan cyber-deck cyber-wave; do
@@ -197,6 +201,10 @@ done
 for command in chmod cp cut date dirname install mkdir mktemp mv rm sed sha256sum; do
     command -v "$command" >/dev/null 2>&1 || { printf 'Required installer command missing: %s\n' "$command" >&2; exit 1; }
 done
+. "$source_dir/packages/arch.sh"
+. "$source_dir/packages/install.sh"
+cw_install_packages
+
 for command in lua hyprctl pgrep flock timeout busctl dbus-update-activation-environment systemctl; do
     command -v "$command" >/dev/null 2>&1 || { printf 'Required command missing before install: %s\n' "$command" >&2; exit 1; }
 done
@@ -234,21 +242,21 @@ fi
 missing_selected=
 for component in $selected_components; do
     case "$component" in
-        cyber-wall) required='python3 mpvpaper' ;;
-        cyber-signal) required='python3 notify-send systemctl' ;;
-        cyber-console) required='python3 ghostty hyprctl' ;;
-        cyber-panel) required='python3 waybar hyprctl' ;;
-        cyber-jackout) required='bash cat chmod cp cut dirname flock hyprctl logger mkdir mktemp mv notify-send pgrep readlink rm sed sha256sum sleep systemctl systemd-inhibit systemd-run timeout' ;;
+        cyber-wall) required='python3 mpvpaper ffmpeg' ;;
+        cyber-signal) required='python3 mako notify-send nmcli checkupdates systemctl' ;;
+        cyber-console) required='python3 ghostty hyprctl impala wiremix bluetui btop yazi' ;;
+        cyber-panel) required='python3 waybar hyprctl playerctl' ;;
+        cyber-jackout) required='wlogout hyprlock hypridle bash cat chmod cp cut dirname flock hyprctl logger mkdir mktemp mv notify-send pgrep readlink rm sed sha256sum sleep systemctl systemd-inhibit systemd-run timeout' ;;
         cyber-scan) required='grim slurp swappy' ;;
-        cyber-deck) required='python3 fuzzel' ;;
-        cyber-wave) required='python3 ghostty hyprctl mpv' ;;
+        cyber-deck) required='python3 fuzzel cliphist wl-paste wl-copy' ;;
+        cyber-wave) required='python3 hyprctl mpv' ;;
     esac
     for dependency in $required; do
         command -v "$dependency" >/dev/null 2>&1 || missing_selected="$missing_selected $dependency($component)"
     done
-    if [ "$component" = cyber-wall ] && command -v python3 >/dev/null 2>&1 && \
+    if { [ "$component" = cyber-wall ] || [ "$component" = cyber-wave ]; } && command -v python3 >/dev/null 2>&1 && \
         ! python3 -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk' >/dev/null 2>&1; then
-        missing_selected="$missing_selected GTK4-PyGObject(cyber-wall)"
+        missing_selected="$missing_selected GTK4-PyGObject($component)"
     fi
 done
 [ -z "$missing_selected" ] || { printf 'Selected component requirements are missing; no desktop files changed:%s\n' "$missing_selected" >&2; exit 1; }
@@ -386,6 +394,12 @@ install_component() {
         *" $component "*)
             printf '\nInstalling %s...\n' "$component"
             if (CDPATH= cd -- "$source_dir/$component" && sh ./install.sh); then
+                integration_ok=yes
+                cw_enable_component "$component" || integration_ok=no
+                if [ "$integration_ok" != yes ]; then
+                    printf 'Default integration failed for %s; see the error above.\n' "$component" >&2
+                    failures="$failures $component(integration)"
+                fi
                 printf 'Installed %s.\n\n' "$component"
             else
                 printf 'Installation failed for %s; see its README for requirements. Continuing.\n\n' "$component" >&2
@@ -425,36 +439,7 @@ elif [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
 else
     printf '%s\n' 'No active Hyprland session was detected; activation will run at the next login.'
 fi
-printf '%s\n' 'System packages are not installed by this script; each component checks its own requirements.'
-case " $selected_components " in
-    *' cyber-signal '*)
-        if [ "$prompt_source" != none ]; then
-            printf 'Enable cyber-signal notification monitoring at login? [y/N] '
-            if [ "$prompt_source" = tty ]; then IFS= read -r enable_signal </dev/tty || enable_signal=n
-            else IFS= read -r enable_signal || enable_signal=n; fi
-            case "$enable_signal" in
-                y|Y|yes|YES)
-                    signal_command=$command_dir/cyber-signal
-                    if [ -x "$signal_command" ]; then "$signal_command" --enable || printf '%s\n' 'Could not enable cyber-signal; run cyber-signal --enable inside your user session.' >&2
-                    else printf '%s\n' 'cyber-signal command was not installed; monitoring remains disabled.' >&2; fi
-                    ;;
-                *) printf '%s\n' 'cyber-signal installed with monitoring disabled; enable later with cyber-signal --enable.' ;;
-            esac
-        else
-            printf '%s\n' 'To enable cyber-signal monitoring later, run cyber-signal --enable inside your user session.'
-        fi
-        ;;
-esac
-case " $selected_components " in
-    *" cyber-jackout "*)
-        printf '%s\n' 'Optional lock/idle policy is not installed by default; enable it with cyber-jackout --enable-idle.'
-        ;;
-esac
-case " $selected_components " in
-    *" cyber-deck "*)
-        printf '%s\n' 'Clipboard history is off by default; install cliphist and wl-clipboard, then run cyber-deck --clipboard enable to add Super+V.'
-        ;;
-esac
+printf '%s\n' 'Selected components include their desktop integrations: cyber-jackout idle locking, cyber-deck clipboard history, and cyber-signal monitoring.'
 case ":${PATH:-}:" in
     *":$command_dir:"*) ;;
     *) printf 'For interactive shell use, add %s to PATH (fish: fish_add_path %s). Hyprland/Waybar already use this recorded path.\n' "$command_dir" "$command_dir" ;;

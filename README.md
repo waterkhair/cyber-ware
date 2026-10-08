@@ -9,8 +9,8 @@ components they want.
 ## Components
 
 - [`cyber-wall/`](cyber-wall/README.md) — GTK image/video wallpaper picker for
-  Hyprland, using `mpvpaper`, with four default images installed in
-  `~/Pictures/Wallpapers` and `cyberpunk-husky.png` as the first-run wallpaper.
+  Hyprland, using `mpvpaper`, with three default images installed in
+  `~/Pictures/Wallpapers` and `cozy-husky-bay.png` as the first-run wallpaper.
 - [`cyber-signal/`](cyber-signal/README.md) — user-scoped system status
   notifications with Mako themes and optional systemd user timers.
 - [`cyber-panel/`](cyber-panel/README.md) — a themed Waybar setup for Hyprland,
@@ -36,10 +36,11 @@ out of the public repository. Hardware-specific settings belong in a local
 
 ## Install the cyber-ware setup
 
-The top-level installer always installs the modular Hyprland configuration,
-then asks whether to install each optional cyber-ware component. It checks the
-selected components' required commands before changing the active desktop and
-does not use sudo or install operating-system packages. It requires Hyprland
+The top-level installer asks which optional cyber-ware components to include,
+installs the required system packages, then installs the modular Hyprland
+configuration and selected components. Automatic package installation supports
+CachyOS/Arch systems with pacman. Only the package transaction uses sudo; run
+the installer as your regular desktop user. It requires Hyprland
 0.55 or newer for the Lua config API and checks that version before touching
 active files. A piped install resolves and records the exact Git revision
 downloaded; running `./install.sh` uses the checked-out tree.
@@ -58,8 +59,9 @@ curl -fsSL https://raw.githubusercontent.com/WaterKhair/cyber-ware/main/install.
 ```
 
 To review the repository first, clone it and run `./install.sh`. Use
-`./install.sh --no-components` to install only the Hyprland config, or
-`./install.sh --all` to install every component without prompts. The config
+`./install.sh --no-components` to install the Hyprland config and its base
+packages, or `./install.sh --all` to select every component. Sudo and pacman
+can still prompt for authentication and transaction confirmation. The config
 installer preserves an existing entry point and module folder under
 `$XDG_STATE_HOME/cyber-ware/backups/`; it leaves an existing
 `hyprland.local.lua` untouched and migrates old `environment.lua`/`monitors.lua`
@@ -69,7 +71,7 @@ The shared command is installed to `~/.local/bin/cyber-ware` by default; ensure
 `~/.local/bin` is on `PATH`.
 After installing selected components, the installer reloads an active
 Hyprland session. Its reload handler starts missing configured services,
-refreshes existing Waybar/Mako instances, and restores a saved wallpaper
+reloads Mako, leaves an existing Waybar running, and restores a saved wallpaper
 without duplicating running processes. If run from a TTY, those actions begin
 on the next Hyprland login. The transaction stages Lua modules first and
 restores the prior config if publication or active config validation fails.
@@ -77,6 +79,57 @@ Automatic reload is paused through the Lua API during publication, and its
 previous setting is restored. Each installation has a unique entry-point token;
 the installer checks it after reload so an unrelated `--config` file cannot
 produce a false success.
+
+### System packages and desktop defaults
+
+Package groups are maintained in [`packages/arch.sh`](packages/arch.sh).
+The installer combines the base group with selected component groups, removes
+duplicates, and installs only missing packages with `sudo pacman -S --needed`.
+Skipped components do not add their package groups; a shared dependency may
+still be needed by the base desktop or another selected component.
+
+| Group | Provided requirements |
+|---|---|
+| Base desktop | Hyprland, Lua, Ghostty, Polkit agent, capture/file-picker portals, PipeWire audio, WirePlumber, Nerd Font, Fuzzel theme picker, system utilities |
+| cyber-wall | Python/GTK 4, mpvpaper, FFmpeg video previews |
+| cyber-signal | Python, Mako, libnotify, NetworkManager client, Arch update checker |
+| cyber-console | Python, Ghostty, Impala/iwd, Wiremix, Bluetui/BlueZ, btop, Yazi and its preview/search tools |
+| cyber-panel | Python, Waybar, playerctl |
+| cyber-jackout | wlogout, Hyprlock, Hypridle, libnotify |
+| cyber-scan | grim, slurp, swappy |
+| cyber-deck | Python, Fuzzel, cliphist, wl-clipboard |
+| cyber-wave | Python/GTK 4, mpv, mpv-mpris |
+
+Selecting cyber-jackout enables its 5-minute lock/10-minute display-off policy;
+selecting cyber-deck enables clipboard history and Super+V; selecting
+cyber-signal enables notification monitoring. These are part of the umbrella
+desktop profile, with no extra feature prompts. Clipboard history persists
+copied content locally. Existing unmanaged lock configs are preserved and
+reported as an integration conflict, not overwritten. A failed integration
+produces a failed installer result with its component identified.
+
+The package phase runs before any active desktop config is replaced. It checks
+that every missing package exists in the configured repositories before asking
+pacman to install anything. Some packages, such as mpvpaper/wlogout, may require
+additional provisioning on plain Arch; cyber-ware does not add repositories or
+install an AUR helper. An unavailable package produces an actionable error.
+
+Start with a fully updated system. The installer does not refresh package
+databases, perform a full system upgrade, install GPU drivers, or select a
+monitor mode. If package installation fails due to stale mirrors/dependencies,
+complete `sudo pacman -Syu` and rerun. Avoid partial upgrades as described in
+the [Arch maintenance guidance](https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported).
+Pacman retains its normal conflict/replacement prompts. System packages remain
+installed after a later desktop-install failure or cyber-ware uninstall.
+NetworkManager/iwd and Bluetooth service configuration is left with the host
+system; package installation does not switch an existing network backend.
+
+Standalone component installers still check requirements without installing
+system packages or enabling the umbrella profile. For another distribution or
+an externally provisioned machine, install the requirements yourself and run
+`CYBER_WARE_INSTALL_PACKAGES=0 ./install.sh`; executable and GTK checks still
+apply. For a streamed install, put the variable on the shell:
+`curl -fsSL https://raw.githubusercontent.com/WaterKhair/cyber-ware/main/install.sh | CYBER_WARE_INSTALL_PACKAGES=0 sh`.
 
 The installed command directory is recorded for Hyprland and Waybar, so a
 custom `PREFIX` works for desktop actions even when the graphical session does
@@ -142,13 +195,14 @@ to the user; integration examples are in the
 greenline, and husky themes. Its standalone installer does not edit Hyprland bindings;
 the bundled cyber-ware configuration binds Super+Space when the component is
 installed.
-Optional clipboard history can be enabled with `cyber-deck --clipboard enable`;
-this adds Super+V and starts collection only while enabled.
+The umbrella installer enables clipboard history and Super+V. For a standalone
+installation, enable it with `cyber-deck --clipboard enable`.
 
-`cyber-jackout --enable-idle` optionally installs the themed Hyprlock and
+The umbrella installer runs `cyber-jackout --enable-idle` to install the themed Hyprlock and
 Hypridle configuration: lock after five minutes, turn displays off after ten,
 and lock before suspend. Existing Hyprland lock/idle configs are preserved.
 Remove the managed integration with `cyber-jackout --disable-idle`.
+Standalone cyber-jackout installations leave this integration opt-in.
 
 ## Repository setup
 
