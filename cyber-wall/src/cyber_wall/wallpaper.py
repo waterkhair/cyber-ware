@@ -97,6 +97,14 @@ def _stop_managed(pid_file: Path, socket_file: Path) -> None:
             except ProcessLookupError:
                 break
             time.sleep(0.05)
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            pass
+        else:
+            raise RuntimeError(
+                f"managed mpvpaper process {pid} did not stop; leaving its state files intact"
+            )
     pid_file.unlink(missing_ok=True)
     # Only remove a stale socket after the managed process is stopped; a live
     # socket not owned by our PID file is left alone.

@@ -68,8 +68,10 @@ local function start_if_available(command, executable, process_name, refresh_way
     hl.exec_cmd(command)
 end
 
-local function refresh_session_services()
-    start_if_available("waybar", "waybar", "waybar", true)
+local function refresh_session_services(refresh_waybar)
+    -- Waybar already handles workspace events. Only explicitly refresh it at
+    -- login; theme/config installers perform their own reload when needed.
+    start_if_available("waybar", "waybar", "waybar", refresh_waybar)
     start_if_available("mako", "mako", "mako")
     start_if_available("env QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/hyprpolkitagent/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent", "hyprpolkitagent")
     start_if_available(user_bin .. "/cyber-wall --set --restore", user_bin .. "/cyber-wall", "mpvpaper")
@@ -96,10 +98,10 @@ local function refresh_session_services()
 end
 
 hl.on("hyprland.start", function()
-    refresh_session_services()
+    refresh_session_services(true)
     hl.dispatch(hl.dsp.focus({ workspace = "1" }))
     -- The helper waits for compositor readiness and repairs portals outside
     -- the event loop, then launches login apps. Reload only refreshes services.
     hl.exec_cmd("sh " .. shell_quote(config_home .. "/hypr/hyprland/session-start.sh"))
 end)
-hl.on("config.reloaded", refresh_session_services)
+hl.on("config.reloaded", function() refresh_session_services(false) end)

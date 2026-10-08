@@ -79,7 +79,10 @@ end
 assert(count("/cyber-wall' --set --restore") == 1, "saved wallpaper is restored once")
 assert(count("session-start.sh") == 1, "login helper is queued once, never on reload")
 assert(count("wl-paste' --watch") == 1, "clipboard watcher is not duplicated")
-assert(count("pkill -USR2") == 3, "running Waybar refreshes on startup and each config reload")
+assert(count("pkill -USR2") == 1, "running Waybar refreshes at login, not on unrelated config reloads")
 assert(count("makoctl reload") == 3, "running Mako refreshes on startup and each config reload")
 assert(dispatches == 1, "workspace focus only happens at session startup")
+running.waybar = false
+handlers["config.reloaded"]()
+assert(count("/waybar'") == 1, "reload still recovers a missing Waybar")
 print("PASS: reload activation restores wallpaper, refreshes managed services, and avoids duplicate processes.")

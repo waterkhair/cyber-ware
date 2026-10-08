@@ -3,9 +3,9 @@
 `cyber-wave` is a keyboard-driven GTK internet radio picker for Hyprland. It opens
 in a dedicated floating GTK window on the `Radio` special workspace.
 `Ctrl+Super+R` shows and hides that window without terminating the picker or
-stopping playback. `Esc` now performs the same hide action, so either control
-can hide or show the persistent picker without restarting the GTK app. `mpv`
-runs independently, so playback continues while the picker is hidden.
+stopping playback. `Esc` hides the visible picker without quitting the GTK app;
+use `Ctrl+Super+R` to show it again. `mpv` runs independently, so playback
+continues while the picker is hidden.
 
 ## Requirements
 
@@ -78,7 +78,8 @@ each station has a display `name` and a direct HTTP(S) audio-stream `url`:
 | Type text | Filter station names and URLs; Backspace edits, Ctrl+U clears |
 | Ctrl+A | Open the add-station form (Tab changes fields, Enter advances/saves, Esc cancels) |
 | Ctrl+D | Confirm and delete the selected station from your list |
-| Esc / Ctrl+Super+R | Hide/show the same persistent picker without closing the GTK app |
+| Esc | Hide the picker without quitting the GTK app |
+| Ctrl+Super+R | Hide/show the persistent picker |
 
 The GTK picker handles Ctrl+J and Ctrl+K as native key events, separate from
 Enter. The three bundled GTK stylesheets follow cyber-ware's synthwave,
