@@ -47,9 +47,9 @@ cyber-wave --uninstall
 cyber-wave --uninstall --purge
 ```
 
-The initial station is Esoterica Radio S3. Manage stations in the picker or
-edit `~/.config/cyber-wave/config.json`; each station has a display `name` and
-a direct HTTP(S) audio-stream `url`:
+Fresh installs include Esoterica Radio S3, Nightride FM - Darksynth, and REYFM
+- LOFI. Manage stations in the picker or edit `~/.config/cyber-wave/config.json`;
+each station has a display `name` and a direct HTTP(S) audio-stream `url`:
 
 ```json
 {
@@ -58,6 +58,14 @@ a direct HTTP(S) audio-stream `url`:
     {
       "name": "Esoterica Radio S3",
       "url": "https://esoterica.servemp3.com:444/listen/darkbasshouse_cyberpunk_hybridtrap/radio.mp3"
+    },
+    {
+      "name": "Nightride FM - Darksynth",
+      "url": "https://stream.nightride.fm/darksynth.mp3"
+    },
+    {
+      "name": "REYFM - LOFI",
+      "url": "https://listen.reyfm.de/lofi_320kbps.mp3"
     }
   ]
 }

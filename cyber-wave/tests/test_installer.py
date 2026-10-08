@@ -34,7 +34,9 @@ class InstallerTests(unittest.TestCase):
         config.write_text(json.dumps(edited))
         with patch("sys.argv", ["installer", str(self.source)]):
             self.assertEqual(installer.main(), 0)
-        self.assertEqual(len(json.loads(config.read_text())["stations"]), 2)
+        stations = json.loads(config.read_text())["stations"]
+        self.assertEqual(len(stations), 4)
+        self.assertEqual(stations[-1]["name"], "My Station")
         command = self.root / "prefix/bin/cyber-wave"
         self.assertIn("cyber-wave-managed-command", command.read_text())
         installed_themes = self.root / "data/cyber-wave/src/cyber_wave/themes"

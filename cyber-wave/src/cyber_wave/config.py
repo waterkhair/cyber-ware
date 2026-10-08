@@ -10,10 +10,20 @@ from urllib.parse import urlsplit
 THEMES = ("synthwave", "greenline", "husky")
 DEFAULT = {
     "theme": "synthwave",
-    "stations": [{
-        "name": "Esoterica Radio S3",
-        "url": "https://esoterica.servemp3.com:444/listen/darkbasshouse_cyberpunk_hybridtrap/radio.mp3",
-    }],
+    "stations": [
+        {
+            "name": "Esoterica Radio S3",
+            "url": "https://esoterica.servemp3.com:444/listen/darkbasshouse_cyberpunk_hybridtrap/radio.mp3",
+        },
+        {
+            "name": "Nightride FM - Darksynth",
+            "url": "https://stream.nightride.fm/darksynth.mp3",
+        },
+        {
+            "name": "REYFM - LOFI",
+            "url": "https://listen.reyfm.de/lofi_320kbps.mp3",
+        },
+    ],
 }
 
 

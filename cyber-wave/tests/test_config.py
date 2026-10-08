@@ -21,10 +21,13 @@ class ConfigTests(unittest.TestCase):
         self.env.start()
         self.addCleanup(self.env.stop)
 
-    def test_default_station_is_esoterica_s3(self):
-        station = config.load_config()["stations"][0]
-        self.assertEqual(station["name"], "Esoterica Radio S3")
-        self.assertTrue(station["url"].startswith("https://"))
+    def test_default_station_list_contains_all_three_radio_stations(self):
+        stations = config.load_config()["stations"]
+        self.assertEqual(
+            [station["name"] for station in stations],
+            ["Esoterica Radio S3", "Nightride FM - Darksynth", "REYFM - LOFI"],
+        )
+        self.assertTrue(all(station["url"].startswith("https://") for station in stations))
 
     def test_invalid_station_url_is_rejected(self):
         path = config.paths()["config"]
