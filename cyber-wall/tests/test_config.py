@@ -18,6 +18,20 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config["output"], "auto")
         self.assertEqual(config["theme"], "synthwave")
         self.assertIn("--load-scripts=no", config["mpvpaper_options"])
+        self.assertEqual(config["default_wallpaper"], "~/Pictures/Wallpapers/cozy-husky-bay.png")
+
+    def test_legacy_empty_default_uses_cozy_husky_bay_when_installed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            wallpaper_dir = home / "Pictures/Wallpapers"
+            wallpaper_dir.mkdir(parents=True)
+            (wallpaper_dir / "cozy-husky-bay.png").touch()
+            config_path = home / ".config/cyber-wall/config.json"
+            config_path.parent.mkdir(parents=True)
+            config_path.write_text('{"default_wallpaper": null}')
+            with patch.dict(os.environ, {"HOME": str(home), "CYBER_WALL_CONFIG": str(config_path)}):
+                config = load_config()
+        self.assertEqual(config["default_wallpaper"], str(wallpaper_dir / "cozy-husky-bay.png"))
 
     def test_user_values_override_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

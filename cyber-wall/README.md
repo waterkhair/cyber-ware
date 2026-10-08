@@ -39,17 +39,21 @@ The installer puts commands in `~/.local/bin`, application code under
 `~/.config/cyber-wall/config.json` only if it does not already exist. Set
 `PREFIX` to choose another command directory and ensure it is on your `PATH`.
 
-The installer copies `calm-water.png`, `cozy-husky-bay.png`,
-`cozy-husky-coding.png`, `cozy-husky-pool.png`, and `cyberpunk-husky.png`
-without conversion.
-Identical files are left in place; if a different file already has one of
-these names, installation stops rather than overwriting it. On a fresh setup
-with no saved selection or custom default, `cyberpunk-husky.png` is the default
-wallpaper and appears in the picker. Existing saved selections and explicit
-`default_wallpaper` values take precedence. Before a wallpaper has been
-applied, `cyber-wall --sync-lock-wallpaper` uses the same default for Hyprlock.
-These images are treated as personal files and remain in
-`~/Pictures/Wallpapers` after cyber-wall is uninstalled.
+The installer copies `city-tijuana.png`, `cozy-husky-bay.png`, and
+`calm-water.png` without conversion. Identical files are left in place; if a
+different file already has one of these names, installation stops rather than
+overwriting it. On a fresh setup with no saved selection or custom default,
+`cozy-husky-bay.png` is the default wallpaper and appears in the picker.
+Existing saved selections and explicit `default_wallpaper` values take
+precedence. Before a wallpaper has been applied, `cyber-wall --sync-lock-wallpaper`
+uses the same default for Hyprlock.
+
+When updating from the older bundled set, the installer removes the retired
+`cozy-husky-coding.png`, `cozy-husky-pool.png`, and `cyberpunk-husky.png` from
+`~/Pictures/Wallpapers` only when their contents still match the original
+bundled files. Customized copies are preserved. Other personal files are never
+removed. The new bundled images are also treated as personal files and remain
+in `~/Pictures/Wallpapers` after cyber-wall is uninstalled.
 
 The GitHub one-line installer requires the parent repository to be public and
 have a commit on its `main` branch. It fetches the parent archive and installs
@@ -85,7 +89,7 @@ Edit `~/.config/cyber-wall/config.json`. The installer never overwrites it.
 {
   "directories": ["~/Pictures/Wallpapers", "~/Videos/Wallpapers"],
   "output": "auto",
-  "default_wallpaper": null,
+  "default_wallpaper": "~/Pictures/Wallpapers/cozy-husky-bay.png",
   "theme": "synthwave",
   "mpvpaper_options": [
     "no-audio", "--load-scripts=no", "--quiet", "--msg-level=all=warn", "--loop-file=inf",

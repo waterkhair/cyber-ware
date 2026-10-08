@@ -15,7 +15,7 @@ AVAILABLE_THEMES = ("greenline", "synthwave", "husky")
 DEFAULTS: dict[str, Any] = {
     "directories": ["~/Pictures/Wallpapers", "~/Videos/Wallpapers"],
     "output": "auto",
-    "default_wallpaper": None,
+    "default_wallpaper": "~/Pictures/Wallpapers/cozy-husky-bay.png",
     "theme": "synthwave",
     "mpvpaper_options": [
         "no-audio",
@@ -110,7 +110,7 @@ def load_config() -> dict[str, Any]:
     if not any(expand_path(item) == default_dir for item in result["directories"]):
         result["directories"] = [str(default_dir), *result["directories"]]
     if result.get("default_wallpaper") is None:
-        installed_default = default_dir / "cyberpunk-husky.png"
+        installed_default = default_dir / "cozy-husky-bay.png"
         if installed_default.is_file():
             result["default_wallpaper"] = str(installed_default)
     if not isinstance(result.get("mpvpaper_options"), list) or not all(

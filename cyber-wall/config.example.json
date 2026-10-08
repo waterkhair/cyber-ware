@@ -4,7 +4,7 @@
     "~/Videos/Wallpapers"
   ],
   "output": "auto",
-  "default_wallpaper": null,
+  "default_wallpaper": "~/Pictures/Wallpapers/cozy-husky-bay.png",
   "theme": "synthwave",
   "mpvpaper_options": [
     "no-audio",

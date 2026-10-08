@@ -89,7 +89,8 @@ fi
 
 wallpaper_dir=$HOME/Pictures/Wallpapers
 wallpaper_source_dir=$project_dir/assets/wallpapers
-wallpaper_files='calm-water.png cozy-husky-bay.png cozy-husky-coding.png cozy-husky-pool.png cyberpunk-husky.png'
+wallpaper_files='city-tijuana.png cozy-husky-bay.png calm-water.png'
+retired_wallpaper_files='cozy-husky-coding.png cozy-husky-pool.png cyberpunk-husky.png'
 if [ ! -d "$wallpaper_source_dir" ]; then
     printf 'Bundled wallpaper source directory is missing: %s\n' "$wallpaper_source_dir" >&2
     exit 1
@@ -147,6 +148,26 @@ for wallpaper in $wallpaper_files; do
 done
 if [ ! -e "$config_dir/config.json" ]; then
     install -m 600 "$project_dir/config.example.json" "$config_dir/config.json"
+fi
+
+# Retire only unmodified copies from the previous bundled set. User-edited
+# versions and unrelated wallpapers are personal files and must be preserved.
+if command -v sha256sum >/dev/null 2>&1; then
+    for wallpaper in $retired_wallpaper_files; do
+        case "$wallpaper" in
+            cozy-husky-coding.png) expected_hash=01c2c0f2e1ba19e8443f427f92235b379c9e351d98835301d2ac73a1ac6fdf46 ;;
+            cozy-husky-pool.png) expected_hash=f67fdf1d68a53f0741382a027edf0d8698431cb7ffa2376549e694de9589660f ;;
+            cyberpunk-husky.png) expected_hash=dc19ff07fbead95c6d79575067202abe5f0a00547528bf9a8c1d389d34354cac ;;
+        esac
+        retired_path=$wallpaper_dir/$wallpaper
+        if [ -f "$retired_path" ] && [ ! -L "$retired_path" ]; then
+            actual_hash=$(sha256sum -- "$retired_path" | cut -d ' ' -f 1)
+            if [ "$actual_hash" = "$expected_hash" ]; then
+                rm -f -- "$retired_path"
+                printf 'Removed retired bundled wallpaper: %s\n' "$retired_path"
+            fi
+        fi
+    done
 fi
 
 shared_theme_file="${XDG_CONFIG_HOME:-$HOME/.config}/cyber-ware/theme"
