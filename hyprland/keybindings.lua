@@ -60,10 +60,6 @@ bind_local_command(navMod, "B", "cyber-console", "bluetui", "Toggle floating Blu
 bind_local_command(navMod, "V", "cyber-console", "wiremix", "Toggle floating Wiremix")
 bind_local_command(navMod, "O", "cyber-console", "btop", "Toggle floating btop")
 bind_local_command(moveMod, "W", "cyber-wall", nil, "Toggle wallpaper picker")
-local zen_browser = system_command_path("zen-browser")
-if zen_browser then
-    hl.bind(navMod .. " + Z", hl.dsp.exec_cmd(zen_browser), { description = "Open Zen Browser" })
-end
 bind_local_command(navMod, "I", "cyber-console", "impala", "Toggle floating Impala")
 bind_local_command(navMod, "Y", "cyber-console", "yazi", "Toggle floating Yazi")
 bind_local_command(navMod, "R", "cyber-wave", nil, "Toggle internet radio picker")

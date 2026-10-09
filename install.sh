@@ -437,7 +437,7 @@ if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] && command -v hyprctl >/dev/null 2>
             exit 1
         fi
         autoreload_paused=no
-        printf '%s\n' 'Hyprland reloaded; configured applications/services are activated without duplicate launches, and saved wallpaper restoration was requested.'
+        printf '%s\n' 'Hyprland reloaded; managed services are refreshed and saved wallpaper restoration was requested.'
     else
         printf '%s\n' 'Hyprland is not reachable from this shell; after logging in, run: hyprctl reload' >&2
         exit 1

@@ -102,7 +102,7 @@ hl.on("hyprland.start", function()
     refresh_session_services(true)
     hl.dispatch(hl.dsp.focus({ workspace = "1" }))
     -- The helper waits for compositor readiness and repairs portals outside
-    -- the event loop, then launches login apps. Reload only refreshes services.
+    -- the event loop. Personal login apps are handled by the local hook.
     hl.exec_cmd("sh " .. shell_quote(config_home .. "/hypr/hyprland/session-start.sh"))
 end)
 hl.on("config.reloaded", function() refresh_session_services(false) end)

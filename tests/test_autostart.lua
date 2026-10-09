@@ -2,7 +2,7 @@ local home = os.getenv("TEST_HOME")
 local repo = os.getenv("TEST_REPO")
 local config = home .. "/.config"
 local bin = home .. "/.local/bin"
-local names = { "waybar", "mako", "makoctl", "cyber-wall", "cyber-deck", "wl-paste", "cliphist", "opendeck", "discord", "steam" }
+local names = { "waybar", "mako", "makoctl", "xsettingsd", "cyber-wall", "cyber-deck", "wl-paste", "cliphist" }
 local available = {}
 for _, name in ipairs(names) do available[bin .. "/" .. name] = true end
 local running = { waybar = true, mako = true }
@@ -46,10 +46,9 @@ hl = {
     on = function(event, callback) handlers[event] = callback end,
     exec_cmd = function(command)
         commands[#commands + 1] = command
-        for _, name in ipairs({ "mpvpaper", "opendeck", "steam" }) do
+        for _, name in ipairs({ "mpvpaper" }) do
             if command:find(name, 1, true) then running[name] = true end
         end
-        if command:find("discord", 1, true) then running.Discord = true end
         if command:find("/cyber-wall", 1, true) then running.mpvpaper = true end
         if command:find("wl-paste", 1, true) then watcher = true end
     end,
@@ -61,9 +60,6 @@ dofile(os.getenv("TEST_REPO") .. "/hyprland/autostart.lua")
 assert(handlers["hyprland.start"], "startup handler registered")
 assert(handlers["config.reloaded"], "reload handler registered")
 handlers["hyprland.start"]()
-running.opendeck = false
-running.Discord = false
-running.steam = false
 handlers["config.reloaded"]()
 time = time + 3
 handlers["config.reloaded"]()

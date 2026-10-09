@@ -19,7 +19,7 @@ case "$WAYLAND_DISPLAY" in /*) display_socket=$WAYLAND_DISPLAY ;; *) display_soc
 attempt=0
 until [ -S "$display_socket" ] && timeout 2 hyprctl monitors -j >/dev/null 2>&1; do
     attempt=$((attempt + 1))
-    [ "$attempt" -lt 40 ] || { echo 'cyber-ware: compositor did not become ready; login apps were not started.' >&2; exit 1; }
+    [ "$attempt" -lt 40 ] || { echo 'cyber-ware: compositor did not become ready; local startup hook was not run.' >&2; exit 1; }
     sleep 0.25
 done
 log 'compositor is responding'
@@ -87,7 +87,7 @@ recover_portals() {
         attempt=$((attempt + 1))
         sleep 1
     done
-    log 'portal recovery failed; dependent login applications were not started'
+    log 'portal recovery failed; local startup hook was not run'
     return 1
 }
 if ! recover_portals; then
@@ -95,18 +95,15 @@ if ! recover_portals; then
     exit 1
 fi
 
-# Check at launch time, after waiting, in case the user already opened an app.
-start_app() {
-    process=$1
-    shift
-    if command -v "$1" >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x -- "$process" >/dev/null; then
-        log "starting login application: $*"
-        "$@" 9>&- >/dev/null 2>&1 &
+local_startup=${CYBER_WARE_LOCAL_STARTUP:-${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.local-session-start.sh}
+if [ "${1:-}" != --portals-only ] && [ -x "$local_startup" ]; then
+    log "running personal startup hook: $local_startup"
+    if "$local_startup"; then
+        log 'personal startup hook finished'
+    else
+        log "personal startup hook failed (exit status $?)"
     fi
-}
-if [ "${1:-}" != --portals-only ]; then
-    start_app opendeck opendeck --hide
-    start_app Discord discord
-    start_app steam steam
+elif [ "${1:-}" != --portals-only ] && [ -e "$local_startup" ]; then
+    log "personal startup hook is not executable; skipping: $local_startup"
 fi
 log 'session startup helper finished'

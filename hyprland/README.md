@@ -34,6 +34,9 @@ The config is an opinionated integration profile, not a minimal Hyprland install
 The base desktop installs Ghostty/Fish, Yazi, Nautilus, and GTK/Qt styling;
 see [`desktop/README.md`](../desktop/README.md) for ownership and restoration.
 Ctrl+Super+F opens Nautilus and replaces the old local binding on that chord.
+Application-specific window rules and startup choices belong in
+`hyprland.local.lua` and its optional local startup hook, not in the shared
+configuration.
 It expects the relevant programs and cyber-ware components to be installed.
 Install each optional component from its own directory and follow its README.
 
@@ -80,8 +83,11 @@ The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`,
 toggles the cyber-wave picker on the `Radio` special workspace; it hides rather
 than closes the window, and its mpv stream continues playing. Super+V is
 registered when cyber-deck's optional clipboard history feature is enabled.
-The startup module also launches Waybar, Mako, OpenDeck, Discord, Steam, and
-other configured applications when present. The optional cyber-jackout
+The startup module launches shared desktop services such as Waybar and Mako.
+It also runs an optional personal hook at
+`~/.config/hypr/hyprland.local-session-start.sh` after portal recovery. Put
+machine-specific application launches there and mark the script executable;
+the shared repository does not launch personal apps. The optional cyber-jackout
 lock/idle integration installs a matching Hyprlock theme and a 5-minute lock,
 10-minute display-off, and lock-before-suspend policy. The startup event
 queues `session-start.sh` outside the compositor event loop. It waits for the
@@ -89,9 +95,8 @@ display and compositor to respond, imports the D-Bus/systemd environment,
 clears failed-service limits, starts the Hyprland and GTK portal backends, and
 checks the capture backend before refreshing the portal frontend. It requires
 `xdg-desktop-portal`, `xdg-desktop-portal-hyprland`, and `xdg-desktop-portal-gtk`.
-OpenDeck, Discord, and Steam are checked and launched after recovery succeeds.
-This happens once per Hyprland session; config reloads do not restart portals or
-relaunch user applications. The umbrella installer installs base and selected
+The personal hook runs once per Hyprland session only after recovery succeeds;
+config reloads do not restart portals or rerun it. The umbrella installer installs base and selected
 component packages on CachyOS/Arch and enables the selected components' idle,
 clipboard, and notification integrations. Standalone installers only check
 dependencies. See the root README for package management and platform limits.
@@ -108,9 +113,9 @@ hyprctl configerrors
 
 - `hyprland.lua` — entry point and optional local override loader
 - `appearance.lua` — gaps, borders, groups, animations, input defaults
-- `windows.lua` — app rules and workspace behavior
+- `windows.lua` — generic window rules and workspace behavior
 - `autostart.lua` — session process startup
-- `session-start.sh` — asynchronous portal readiness/recovery and login apps
+- `session-start.sh` — asynchronous portal readiness/recovery and personal startup hook
 - `keybindings.lua` — keyboard and mouse bindings
 - `machine.example.lua` — optional per-machine GPU and monitor settings
 
