@@ -51,6 +51,7 @@ class SessionStartTests(unittest.TestCase):
         env = dict(os.environ, PATH=str(bin_dir) + ':/usr/bin:/bin', MOCK_ROOT=str(root),
                    XDG_RUNTIME_DIR=str(root), WAYLAND_DISPLAY='wayland-test',
                    XDG_STATE_HOME=str(root / 'state'), PAM_KWALLET5_LOGIN='',
+                   XDG_CONFIG_HOME=str(root / 'config'),
                    HYPRLAND_INSTANCE_SIGNATURE='isolated-test', **options)
         result = subprocess.run(['sh', str(SOURCE)], env=env, capture_output=True,
                                 text=True, timeout=10)

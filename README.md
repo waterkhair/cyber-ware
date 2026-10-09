@@ -29,6 +29,8 @@ components they want.
   picker with `mpv` playback and cyber-ware themes.
 - [`hyprland/`](hyprland/README.md) — modular Lua configuration and setup
   guidance for integrating the cyber-ware components.
+- [`desktop/`](desktop/README.md) — base Ghostty, Fish, Yazi, Nautilus, and
+  GTK/Qt appearance integration, installed with the umbrella desktop.
 
 Keep personal secrets, machine-specific state, and unreviewed configuration
 out of the public repository. Hardware-specific settings belong in a local
@@ -59,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/WaterKhair/cyber-ware/main/install.
 ```
 
 To review the repository first, clone it and run `./install.sh`. Use
-`./install.sh --no-components` to install the Hyprland config and its base
+`./install.sh --no-components` to install the Hyprland config, desktop profile, and base
 packages, or `./install.sh --all` to select every component. Sudo and pacman
 can still prompt for authentication and transaction confirmation. The config
 installer preserves an existing entry point and module folder under
@@ -90,10 +92,10 @@ still be needed by the base desktop or another selected component.
 
 | Group | Provided requirements |
 |---|---|
-| Base desktop | Hyprland, Lua, Ghostty, Polkit agent, capture/file-picker portals, PipeWire audio, WirePlumber, Nerd Font, Fuzzel theme picker, system utilities |
+| Base desktop | Hyprland, Lua/Python, Ghostty, Fish, Yazi and media/preview tools, Nautilus/GVfs, GTK/Qt themes, Breeze icons/cursors, fonts, xsettingsd, Polkit agent, portals, PipeWire/WirePlumber audio, Fuzzel theme picker, system utilities |
 | cyber-wall | Python/GTK 4, mpvpaper, FFmpeg video previews |
 | cyber-signal | Python, Mako, libnotify, NetworkManager client, Arch update checker |
-| cyber-console | Python, Ghostty, Impala/iwd, Wiremix, Bluetui/BlueZ, btop, Yazi and its preview/search tools |
+| cyber-console | Python, Ghostty, Impala/iwd, Wiremix, Bluetui/BlueZ, btop (Yazi is part of the base desktop) |
 | cyber-panel | Python, Waybar, playerctl |
 | cyber-jackout | wlogout, Hyprlock, Hypridle, libnotify |
 | cyber-scan | grim, slurp, swappy |
@@ -107,6 +109,13 @@ desktop profile, with no extra feature prompts. Clipboard history persists
 copied content locally. Existing unmanaged lock configs are preserved and
 reported as an integration conflict, not overwritten. A failed integration
 produces a failed installer result with its component identified.
+
+The base [desktop profile](desktop/README.md) configures Ghostty to launch Fish,
+installs a portable shell prompt and Yazi media openers, applies coordinated
+GTK/Qt appearance, and binds Ctrl+Super+F to Nautilus. It is included even with
+`--no-components`. Original app configs are backed up; subsequent edits are
+preserved. Uninstall restores managed originals. Theme changes also update
+this profile. No tmux, SDDM, Limine, or personal application profiles are copied.
 
 The package phase runs before any active desktop config is replaced. It checks
 that every missing package exists in the configured repositories before asking
@@ -163,8 +172,9 @@ To remove only the umbrella Hyprland config and `cyber-ware` command:
 cyber-ware --uninstall
 ```
 
-Uninstall requires typing `cyber-ware` to confirm. It restores the original
-Hyprland entry point and module directory, preserves a recovery copy of the
+Uninstall requires typing `cyber-ware` to confirm. It restores managed base
+desktop configs and interface preferences, preserves user-edited profile files,
+restores the original Hyprland entry point and module directory, and preserves a recovery copy of the
 current files, and leaves optional components, the shared theme preference,
 and backups in place. Remove optional components separately with their own
 `--uninstall` commands.

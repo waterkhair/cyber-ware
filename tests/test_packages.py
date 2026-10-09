@@ -66,6 +66,10 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('hyprland', packages)
         self.assertIn('ghostty', packages)
+        for name in ('fish', 'yazi', 'nautilus', 'mpv', 'gtk4', 'qt5ct', 'qt6ct',
+                     'adw-gtk-theme', 'breeze-icons', 'breeze-cursors'):
+            self.assertIn(name, packages)
+        self.assertNotIn('dolphin', packages)
         self.assertNotIn('mpvpaper', packages)
         self.assertNotIn('waybar', packages)
         self.assertEqual(sum(c.startswith('sudo ') for c in calls), 1)

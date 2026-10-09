@@ -50,6 +50,12 @@ end
 if terminal then
     hl.bind(navMod .. " + T", hl.dsp.exec_cmd(terminal), { description = "Open terminal" })
 end
+local files = system_command_path("nautilus")
+if files then
+    -- Retire the former machine-local Files binding before adding the shared one.
+    hl.unbind(navMod .. " + F")
+    hl.bind(navMod .. " + F", hl.dsp.exec_cmd(files), { description = "Open Files" })
+end
 bind_local_command(navMod, "B", "cyber-console", "bluetui", "Toggle floating Bluetui")
 bind_local_command(navMod, "V", "cyber-console", "wiremix", "Toggle floating Wiremix")
 bind_local_command(navMod, "O", "cyber-console", "btop", "Toggle floating btop")

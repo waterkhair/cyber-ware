@@ -9,7 +9,7 @@ modules.
 The repository's top-level `install.sh` collects component choices, installs
 their system packages with pacman, then installs this configuration and the
 selected components. Use
-`./install.sh --no-components` for only the config or `./install.sh --all` to
+`./install.sh --no-components` for the base desktop/config or `./install.sh --all` to
 select every component (sudo/pacman may still prompt). The config conditionally registers
 component shortcuts and startup commands when their executables are present.
 When upgrading an older modular config, the installer preserves existing
@@ -31,6 +31,9 @@ and removes the shared command. It does not uninstall standalone components;
 use each component's own uninstall command for that.
 
 The config is an opinionated integration profile, not a minimal Hyprland install.
+The base desktop installs Ghostty/Fish, Yazi, Nautilus, and GTK/Qt styling;
+see [`desktop/README.md`](../desktop/README.md) for ownership and restoration.
+Ctrl+Super+F opens Nautilus and replaces the old local binding on that chord.
 It expects the relevant programs and cyber-ware components to be installed.
 Install each optional component from its own directory and follow its README.
 

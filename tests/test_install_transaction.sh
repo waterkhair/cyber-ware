@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 export CYBER_WARE_INSTALL_PACKAGES=0
+export GSETTINGS_BACKEND=memory
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/cyber-ware-transaction-test.XXXXXX")

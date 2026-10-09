@@ -73,6 +73,7 @@ local function refresh_session_services(refresh_waybar)
     -- login; theme/config installers perform their own reload when needed.
     start_if_available("waybar", "waybar", "waybar", refresh_waybar)
     start_if_available("mako", "mako", "mako")
+    start_if_available("xsettingsd", "xsettingsd", "xsettingsd")
     start_if_available("env QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/hyprpolkitagent/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent", "hyprpolkitagent")
     start_if_available(user_bin .. "/cyber-wall --set --restore", user_bin .. "/cyber-wall", "mpvpaper")
     local idle_config = io.open(config_home .. "/hypr/hypridle.conf", "r")

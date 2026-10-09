@@ -66,7 +66,7 @@ Usage: ./install.sh [--all | --no-components]
 
 Choose components, install their system packages, and configure the desktop.
   --all            select every component (sudo/pacman may still prompt)
-  --no-components  install only the Hyprland configuration
+  --no-components  install the base desktop without optional components
 EOF
         exit 0
         ;;
@@ -95,7 +95,7 @@ else
 fi
 
 for file in hyprland/hyprland.lua hyprland/appearance.lua hyprland/windows.lua \
-    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware packages/arch.sh packages/install.sh; do
+    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware packages/arch.sh packages/install.sh desktop/manage.py; do
     [ -f "$source_dir/$file" ] || { printf 'Required config file is missing: %s\n' "$file" >&2; exit 1; }
 done
 for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan cyber-deck cyber-wave; do
@@ -205,7 +205,7 @@ done
 . "$source_dir/packages/install.sh"
 cw_install_packages
 
-for command in lua hyprctl pgrep flock timeout busctl dbus-update-activation-environment systemctl; do
+for command in python3 fish lua hyprctl pgrep flock timeout busctl dbus-update-activation-environment systemctl; do
     command -v "$command" >/dev/null 2>&1 || { printf 'Required command missing before install: %s\n' "$command" >&2; exit 1; }
 done
 if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
@@ -260,6 +260,7 @@ for component in $selected_components; do
     fi
 done
 [ -z "$missing_selected" ] || { printf 'Selected component requirements are missing; no desktop files changed:%s\n' "$missing_selected" >&2; exit 1; }
+python3 "$source_dir/desktop/manage.py" check "${selected_theme:-synthwave}"
 
 # Stage and syntax-check the entire required module set before publication.
 mkdir -p "$hypr_dir"
@@ -374,7 +375,14 @@ if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
     set_autoreload "$previous_autoreload" || exit 1
     autoreload_paused=no
 fi
+python3 "$source_dir/desktop/manage.py" install "${selected_theme:-synthwave}"
 install_complete=yes
+if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+    python3 "$source_dir/desktop/manage.py" settings || {
+        printf '%s\n' 'Desktop files installed, but GTK interface preferences could not be applied; retry at next login.' >&2
+        exit 1
+    }
+fi
 printf 'Installed the cyber-ware Hyprland config in %s\n' "$hypr_dir"
 printf 'Installed cyber-ware theme command in %s\n' "$command_path"
 printf 'Source revision: %s\n' "$revision"

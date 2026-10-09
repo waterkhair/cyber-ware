@@ -25,12 +25,20 @@ done
 log 'compositor is responding'
 
 environment_vars='WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE'
+for variable in QT_QPA_PLATFORMTHEME XCURSOR_THEME XCURSOR_SIZE; do
+    if printenv "$variable" >/dev/null 2>&1; then environment_vars="$environment_vars $variable"; fi
+done
 if [ -n "${DISPLAY:-}" ]; then environment_vars="$environment_vars DISPLAY"; fi
 log 'importing graphical activation environment into D-Bus and systemd'
 # shellcheck disable=SC2086
 dbus-update-activation-environment --systemd $environment_vars
 # shellcheck disable=SC2086
 systemctl --user import-environment $environment_vars
+
+desktop_helper=${XDG_CONFIG_HOME:-$HOME/.config}/cyber-ware/desktop/manage.py
+if [ -f "$desktop_helper" ]; then
+    python3 "$desktop_helper" settings || log 'could not apply GTK interface settings; inspect the error above'
+fi
 
 # PAM starts the wallet handoff before the compositor has a usable display.
 # Run it once now that both the Wayland socket and activation environment exist.
