@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 COMMAND = Path(__file__).resolve().parents[1] / 'cyber-jackout/bin/cyber-jackout'
+BUNDLED_WALLPAPER = COMMAND.resolve().parents[1] / 'idle/hyprlock-background.jpg'
 
 
 class LockIncludeTests(unittest.TestCase):
@@ -42,6 +43,7 @@ class LockIncludeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f'source = {self.include}', self.lock.read_text())
         self.assertTrue(self.include.is_file())
+        self.assertIn(f'$CYBER_WALLPAPER = {BUNDLED_WALLPAPER}', self.include.read_text())
 
     def test_theme_upgrade_creates_missing_include(self):
         self.lock.write_text('background {\n    color = black\n}\n')
@@ -51,6 +53,7 @@ class LockIncludeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(self.include.is_file())
         self.assertIn(f'source = {self.include}', self.lock.read_text())
+        self.assertIn(f'$CYBER_WALLPAPER = {BUNDLED_WALLPAPER}', self.include.read_text())
 
     def test_dangling_symlink_is_refused_before_installing_configs(self):
         target = self.root / 'unrelated'

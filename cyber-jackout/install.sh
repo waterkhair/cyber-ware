@@ -30,6 +30,10 @@ if [ -z "$project_dir" ] || [ ! -f "$project_dir/bin/cyber-jackout" ]; then
 fi
 
 [ -f "$project_dir/bin/cyber-jackout" ] || { printf '%s\n' 'cyber-jackout source was not found.' >&2; exit 1; }
+[ -f "$project_dir/idle/hyprlock-background.jpg" ] || {
+    printf '%s\n' 'The bundled Hyprlock background is missing.' >&2
+    exit 1
+}
 
 prefix=${PREFIX:-"$HOME/.local"}
 data_home=${XDG_DATA_HOME:-"$HOME/.local/share"}

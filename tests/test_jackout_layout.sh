@@ -8,6 +8,7 @@ printf '%s\n' 'original user layout' > "$tmp/home/.config/wlogout/layout"
 env HOME="$tmp/home" PREFIX="$tmp/home/.local" XDG_CONFIG_HOME="$tmp/home/.config" \
     XDG_DATA_HOME="$tmp/home/.local/share" XDG_STATE_HOME="$tmp/home/.local/state" \
     sh "$repo/cyber-jackout/install.sh" >/dev/null
+cmp "$repo/cyber-jackout/idle/hyprlock-background.jpg" "$tmp/home/.local/share/cyber-jackout/idle/hyprlock-background.jpg"
 layout=$tmp/home/.config/wlogout/layout
 grep -Fq "$tmp/home/.local/bin/cyber-jackout logout" "$layout"
 grep -Fq "$tmp/home/.local/bin/cyber-jackout reboot" "$layout"

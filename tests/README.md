@@ -30,6 +30,8 @@ symlink refusal, failed image rendering, and rollback after publication errors.
 SDDM tests cover installing/preserving the upstream Monochrome theme, enabling
 the tracked custom wallpaper, setting Monochrome as default without changing
 unrelated config, and backing up original configuration files.
+Lock include tests verify cyber-jackout installs and selects its bundled default
+Hyprlock image while preserving an existing cyber-wall wallpaper include.
 
 Coverage includes reload activation, duplicate-process checks, managed power
 actions, copy/validation failure rollback, reinstall/uninstall baselines,

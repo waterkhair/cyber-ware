@@ -28,7 +28,7 @@ atomic_copy() {
 file_hash() { sha256sum -- "$1" | cut -d ' ' -f 1; }
 
 ensure_wallpaper_include() {
-    local temporary
+    local temporary bundled_wallpaper
     [[ ! -L "$config_home/hypr" && ! -L "$hyprlock_wallpaper_config" ]] || {
         printf 'Refusing symlinked wallpaper configuration: %s\n' "$hyprlock_wallpaper_config" >&2; return 1;
     }
@@ -37,8 +37,15 @@ ensure_wallpaper_include() {
         return 0
     fi
     mkdir -p -- "$config_home/hypr"
+    bundled_wallpaper="$app_dir/idle/hyprlock-background.jpg"
+    [[ -f "$bundled_wallpaper" && ! -L "$bundled_wallpaper" ]] || {
+        printf 'Bundled Hyprlock wallpaper is missing or unsafe: %s\n' "$bundled_wallpaper" >&2; return 1;
+    }
+    case "$bundled_wallpaper" in *'#'*|*'$'*|*$'\n'*)
+        printf '%s\n' 'Bundled wallpaper path contains unsupported Hyprlock syntax.' >&2; return 1;;
+    esac
     temporary=$(mktemp "${hyprlock_wallpaper_config}.XXXXXX") || return 1
-    printf '%s\n' '$CYBER_WALLPAPER = /dev/null' > "$temporary"
+    printf '$CYBER_WALLPAPER = %s\n' "$bundled_wallpaper" > "$temporary"
     # No-clobber publication also refuses a destination created concurrently.
     if ! ln -- "$temporary" "$hyprlock_wallpaper_config"; then
         rm -f -- "$temporary"; return 1

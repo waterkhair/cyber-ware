@@ -74,8 +74,12 @@ explicitly with `cyber-jackout --enable-idle`. It locks after 5 minutes, turns
 the display off after 10 minutes, and requests a lock before suspend. The lock
 screen uses the selected cyber-wall wallpaper when available; the image path
 lives in the separate `~/.config/hypr/hyprlock-wallpaper.conf` include, so
-changing the jackout theme preserves the wallpaper. Without a synced image,
-the background color is used. Existing
+changing the jackout theme preserves the wallpaper. cyber-jackout bundles
+`idle/hyprlock-background.jpg` and uses it as the default when it creates the
+wallpaper include. Running `cyber-wall --sync-lock-wallpaper` explicitly
+replaces that default with the selected cyber-wall wallpaper. The lock
+wallpaper uses Hyprlock's background blur (`blur_passes = 3`, `blur_size = 6`).
+Existing
 `~/.config/hypr/hypridle.conf` or `hyprlock.conf` files are never overwritten;
 the optional command refuses to install if either already exists. The generated
 files are hash-tracked, and theme changes update only an unedited managed lock
