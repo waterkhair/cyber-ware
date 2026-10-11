@@ -21,7 +21,9 @@ cw_install_packages() {
         return 1
     fi
     cw_requested=
-    for cw_group in base $selected_components; do
+    cw_groups="base $selected_components"
+    [ "${install_sddm:-no}" != yes ] || cw_groups="$cw_groups sddm"
+    for cw_group in $cw_groups; do
         cw_group_packages=$(cw_packages "$cw_group") || return 1
         printf 'Packages for %s: %s\n' "$cw_group" "$cw_group_packages"
         for cw_package in $cw_group_packages; do

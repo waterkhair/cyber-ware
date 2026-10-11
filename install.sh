@@ -5,6 +5,8 @@ script_name=${0##*/}
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 source_dir=$script_dir
 revision=unknown
+sddm_download_dir=
+sddm_wallpaper_source=
 case "$script_name" in sh|bash|dash|-sh|-bash) source_dir= ;; esac
 download_dir=
 local_config_tmp=
@@ -43,6 +45,7 @@ cleanup() {
         set_autoreload "$previous_autoreload" || printf '%s\n' 'Could not restore the previous automatic-reload setting.' >&2
     fi
     [ -z "$download_dir" ] || rm -rf -- "$download_dir"
+    [ -z "$sddm_download_dir" ] || rm -rf -- "$sddm_download_dir"
     [ -z "$local_config_tmp" ] || rm -f -- "$local_config_tmp"
     [ -z "$stage_dir" ] || rm -rf -- "$stage_dir"
     [ -z "$transaction_dir" ] || rm -rf -- "$transaction_dir"
@@ -53,7 +56,7 @@ trap 'exit 1' HUP INT TERM
 
 mode=prompt
 if [ "$(id -u)" -eq 0 ]; then
-    printf '%s\n' 'Run cyber-ware as your regular desktop user; only package installation uses sudo.' >&2
+    printf '%s\n' 'Run cyber-ware as your regular desktop user; package installation and optional SDDM setup use sudo.' >&2
     exit 1
 fi
 case "${1:-}" in
@@ -64,9 +67,10 @@ case "${1:-}" in
         cat <<'EOF'
 Usage: ./install.sh [--all | --no-components]
 
-Choose components, install their system packages, and configure the desktop.
-  --all            select every component (sudo/pacman may still prompt)
-  --no-components  install the base desktop without optional components
+Choose optional components and SDDM setup, install selected system packages,
+and configure the desktop.
+  --all            select every component and SDDM setup
+  --no-components  install the base desktop without optional components or SDDM
 EOF
         exit 0
         ;;
@@ -95,7 +99,7 @@ else
 fi
 
 for file in hyprland/hyprland.lua hyprland/appearance.lua hyprland/windows.lua \
-    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware packages/arch.sh packages/install.sh desktop/manage.py; do
+    hyprland/autostart.lua hyprland/keybindings.lua hyprland/session-start.sh bin/cyber-ware packages/arch.sh packages/install.sh desktop/manage.py sddm/install.py; do
     [ -f "$source_dir/$file" ] || { printf 'Required config file is missing: %s\n' "$file" >&2; exit 1; }
 done
 for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout cyber-scan cyber-deck cyber-wave; do
@@ -104,8 +108,12 @@ for component in cyber-wall cyber-signal cyber-panel cyber-console cyber-jackout
         exit 1
     }
 done
+[ -f "$source_dir/sddm/install.py" ] && [ -f "$source_dir/sddm/wallpaper.png" ] || {
+    printf '%s\n' 'The SDDM setup helper or tracked wallpaper asset is missing.' >&2
+    exit 1
+}
 
-# Select components before touching active Hyprland files.
+# Select optional components and SDDM setup before touching active files.
 if [ -t 0 ]; then prompt_source=stdin
 elif (exec 3</dev/tty) 2>/dev/null; then prompt_source=tty
 else prompt_source=none; fi
@@ -124,6 +132,14 @@ for component in cyber-wall cyber-signal cyber-console cyber-panel cyber-jackout
     fi
     case "$answer" in y|Y|yes|YES) selected_components="$selected_components $component" ;; esac
 done
+if [ "$mode" = all ]; then answer=y
+elif [ "$mode" = none ]; then answer=n
+else
+    printf '%s\n' 'Install SDDM and the Monochrome greeter theme, and make Monochrome the default? [y/N] '
+    if [ "$prompt_source" = tty ]; then IFS= read -r answer </dev/tty || answer=
+    else IFS= read -r answer || answer=; fi
+fi
+case "$answer" in y|Y|yes|YES) install_sddm=yes ;; *) install_sddm=no ;; esac
 
 config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 state_home=${XDG_STATE_HOME:-"$HOME/.local/state"}
@@ -203,6 +219,34 @@ for command in chmod cp cut date dirname install mkdir mktemp mv rm sed sha256su
 done
 . "$source_dir/packages/arch.sh"
 . "$source_dir/packages/install.sh"
+[ "$install_sddm" != yes ] || command -v sudo >/dev/null 2>&1 || {
+    printf '%s\n' 'sudo is required to install SDDM and configure the system greeter; no desktop files changed.' >&2
+    exit 1
+}
+if [ "$install_sddm" = yes ]; then
+    for command in curl tar; do
+        command -v "$command" >/dev/null 2>&1 || { printf 'Required for upstream SDDM theme download: %s\n' "$command" >&2; exit 1; }
+    done
+    sddm_download_dir=$(mktemp -d "${TMPDIR:-/tmp}/cyber-ware-monochrome.XXXXXX")
+    sddm_revision=1c9983e8d1384ec2d9ff0fac59c5265fc74d0e6b
+    sddm_archive="$sddm_download_dir/upstream.tar.gz"
+    sddm_extract="$sddm_download_dir/source"
+    mkdir "$sddm_extract"
+    curl -fsSL "https://gitlab.com/pwyde/monochrome-kde/-/archive/$sddm_revision/monochrome-kde-$sddm_revision.tar.gz" -o "$sddm_archive" || {
+        printf '%s\n' 'Could not download the pinned Monochrome SDDM theme from GitLab.' >&2
+        exit 1
+    }
+    tar -xzf "$sddm_archive" --strip-components=1 -C "$sddm_extract" || {
+        printf '%s\n' 'Could not unpack the Monochrome upstream archive.' >&2
+        exit 1
+    }
+    sddm_theme_source=$sddm_extract/sddm/themes/monochrome
+    [ -f "$sddm_theme_source/metadata.desktop" ] && [ -f "$sddm_theme_source/theme.conf" ] || {
+        printf '%s\n' 'The pinned upstream archive does not contain the expected Monochrome SDDM theme.' >&2
+        exit 1
+    }
+    sddm_wallpaper_source=$source_dir/sddm/wallpaper.png
+fi
 cw_install_packages
 
 for command in python3 fish lua hyprctl pgrep flock timeout busctl dbus-update-activation-environment systemctl; do
@@ -448,6 +492,10 @@ else
     printf '%s\n' 'No active Hyprland session was detected; activation will run at the next login.'
 fi
 printf '%s\n' 'Selected components include their desktop integrations: cyber-jackout idle locking, cyber-deck clipboard history, and cyber-signal monitoring.'
+if [ "$install_sddm" = yes ]; then
+    printf '\nInstalling the SDDM Monochrome theme and setting it as default...\n'
+    sudo python3 "$source_dir/sddm/install.py" "$sddm_theme_source" "$sddm_wallpaper_source"
+fi
 case ":${PATH:-}:" in
     *":$command_dir:"*) ;;
     *) printf 'For interactive shell use, add %s to PATH (fish: fish_add_path %s). Hyprland/Waybar already use this recorded path.\n' "$command_dir" "$command_dir" ;;

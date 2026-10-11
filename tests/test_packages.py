@@ -71,8 +71,15 @@ class PackageTests(unittest.TestCase):
             self.assertIn(name, packages)
         self.assertNotIn('dolphin', packages)
         self.assertNotIn('mpvpaper', packages)
+        self.assertNotIn('sddm', packages)
         self.assertNotIn('waybar', packages)
         self.assertEqual(sum(c.startswith('sudo ') for c in calls), 1)
+
+    def test_sddm_is_installed_only_when_the_setup_is_selected(self):
+        result, _, packages = self.run_packages(install_sddm='yes')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('sddm', packages)
+        self.assertNotIn('waybar', packages)
 
     def test_selected_components_are_combined_and_deduplicated(self):
         result, calls, packages = self.run_packages('cyber-wall cyber-wave cyber-deck')

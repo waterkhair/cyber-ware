@@ -61,9 +61,11 @@ curl -fsSL https://raw.githubusercontent.com/WaterKhair/cyber-ware/main/install.
 ```
 
 To review the repository first, clone it and run `./install.sh`. Use
-`./install.sh --no-components` to install the Hyprland config, desktop profile, and base
-packages, or `./install.sh --all` to select every component. Sudo and pacman
-can still prompt for authentication and transaction confirmation. The config
+`./install.sh --no-components` to install the Hyprland config, desktop profile,
+and base packages without optional components or SDDM, or `./install.sh --all`
+to select every component and the SDDM setup. Interactive installs ask about
+SDDM separately from components. Sudo and pacman can still prompt for
+authentication and transaction confirmation. The config
 installer preserves an existing entry point and module folder under
 `$XDG_STATE_HOME/cyber-ware/backups/`; it leaves an existing
 `hyprland.local.lua` untouched and migrates old `environment.lua`/`monitors.lua`
@@ -101,6 +103,20 @@ still be needed by the base desktop or another selected component.
 | cyber-scan | grim, slurp, swappy |
 | cyber-deck | Python, Fuzzel, cliphist, wl-clipboard |
 | cyber-wave | Python/GTK 4, mpv, mpv-mpris |
+| Optional SDDM setup (not a component) | SDDM and the Monochrome greeter theme |
+
+The SDDM prompt installs SDDM, downloads the Monochrome theme from a pinned
+revision of its upstream GitLab repository, installs the tracked
+[`sddm/wallpaper.png`](sddm/wallpaper.png) into the theme directory, enables
+Monochrome's custom-background setting, and selects Monochrome as the default
+greeter theme. The theme source itself is not bundled in cyber-ware. It backs
+up an existing `/etc/sddm.conf` before changing only its `[Theme] Current`
+setting; all other SDDM settings, including the display-server choice, are
+preserved. An existing valid Monochrome theme directory is retained and
+configured rather than overwritten. The installer does not enable or restart
+SDDM. Package, theme, wallpaper, and greeter configuration changes remain
+after `cyber-ware --uninstall`; the original config backup is
+`/etc/sddm.conf.cyber-ware-backup` when one was made.
 
 Selecting cyber-jackout enables its 5-minute lock/10-minute display-off policy;
 selecting cyber-deck enables clipboard history and Super+V; selecting
@@ -115,7 +131,7 @@ installs a portable shell prompt and Yazi media openers, applies coordinated
 GTK/Qt appearance, and binds Ctrl+Super+F to Nautilus. It is included even with
 `--no-components`. Original app configs are backed up; subsequent edits are
 preserved. Uninstall restores managed originals. Theme changes also update
-this profile. No tmux, SDDM, Limine, or personal application profiles are copied.
+this profile. No tmux, Limine, or personal application profiles are copied.
 
 The package phase runs before any active desktop config is replaced. It checks
 that every missing package exists in the configured repositories before asking

@@ -6,6 +6,7 @@ Run from the repository root:
 sh tests/test_autostart.sh
 python3 tests/test_session_start.py
 python3 tests/test_lock_include.py
+python3 tests/test_sddm.py
 sh tests/test_install_transaction.sh
 sh tests/test_stream_bootstrap.sh
 sh tests/test_jackout_layout.sh
@@ -26,6 +27,9 @@ readiness, backend and frontend recovery, failure gating, and apps opened during
 startup. Wallet initialization is disabled and logs stay in temporary state.
 Lock tests cover custom configuration directories, missing includes on upgrade,
 symlink refusal, failed image rendering, and rollback after publication errors.
+SDDM tests cover installing/preserving the upstream Monochrome theme, enabling
+the tracked custom wallpaper, setting Monochrome as default without changing
+unrelated config, and backing up original configuration files.
 
 Coverage includes reload activation, duplicate-process checks, managed power
 actions, copy/validation failure rollback, reinstall/uninstall baselines,

@@ -11,6 +11,7 @@ cw_packages() {
         cyber-scan) echo 'grim slurp swappy' ;;
         cyber-deck) echo 'python fuzzel cliphist wl-clipboard' ;;
         cyber-wave) echo 'python python-gobject gtk4 mpv mpv-mpris' ;;
+        sddm) echo 'sddm' ;;
         *) printf 'Unknown package group: %s\n' "$1" >&2; return 1 ;;
     esac
 }
