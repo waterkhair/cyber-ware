@@ -91,8 +91,12 @@ is handled by a detached local `mpv` process controlled over a user-private
 Unix socket under `$XDG_RUNTIME_DIR/cyber-wave`.
 
 When `mpv-mpris` is installed, cyber-wave explicitly loads its plugin so the
-radio appears as an MPRIS player (for example, in Waybar's MPRIS module). On
-CachyOS/Arch, install it with `sudo pacman -S mpv-mpris`; restart playback
+radio appears as one MPRIS player (for example, in Waybar's MPRIS module).
+The managed radio process disables automatic script loading and clears the
+configured script list before loading MPRIS once; this prevents duplicate
+registrations when the plugin is also in `/etc/mpv/scripts`. Other MPV audio
+settings still apply. Restart the radio process after upgrading this behavior.
+On CachyOS/Arch, install it with `sudo pacman -S mpv-mpris`; restart playback
 after installing it.
 
 ## Hyprland integration

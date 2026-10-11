@@ -38,8 +38,23 @@ class PlayerTests(unittest.TestCase):
         player._start()
         args = popen.call_args.args[0]
         self.assertIn("--script=/etc/mpv/scripts/mpris.so", args)
+        self.assertIn("--load-scripts=no", args)
+        self.assertIn("--scripts=", args)
+        self.assertEqual(sum(arg.startswith("--script=") for arg in args), 1)
         mpris_script.assert_called_once_with()
         request.assert_called_once_with(["get_property", "idle-active"], wait=3)
+
+    @patch("cyber_wave.player._request", return_value={})
+    @patch("cyber_wave.player.subprocess.Popen")
+    @patch("cyber_wave.player.Path.unlink")
+    @patch("cyber_wave.player._socket_path", return_value=Path("/tmp/cyber-wave-test.sock"))
+    @patch("cyber_wave.player._mpris_script", return_value=None)
+    @patch("cyber_wave.player.shutil.which", return_value="/usr/bin/mpv")
+    def test_start_without_optional_mpris_plugin(self, _which, _script, _path, _unlink, popen, _request):
+        player._start()
+        args = popen.call_args.args[0]
+        self.assertIn("--load-scripts=no", args)
+        self.assertFalse(any(arg.startswith("--script=") for arg in args))
 
 
 if __name__ == "__main__":

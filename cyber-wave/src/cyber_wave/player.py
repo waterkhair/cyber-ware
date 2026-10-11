@@ -57,7 +57,10 @@ def _start() -> None:
         raise RuntimeError("mpv is missing; install it with your distribution package manager")
     path = _socket_path()
     path.unlink(missing_ok=True)
+    # Isolate the managed player's scripts. Auto-loading plus --script loads
+    # mpv-mpris twice on Arch, advertising two MPRIS players for one process.
     args = [mpv, "--no-video", "--force-window=no", "--terminal=no", "--idle=yes",
+            "--load-scripts=no", "--scripts=",
             f"--input-ipc-server={path}"]
     script = _mpris_script()
     if script:

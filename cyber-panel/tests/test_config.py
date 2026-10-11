@@ -85,7 +85,7 @@ class CyberPanelAssetsTests(unittest.TestCase):
                 "XDG_STATE_HOME": str(root / "state"),
                 "CYBER_PANEL_APP_DIR": str(root),
             }
-            with patch.dict(os.environ, env, clear=False), patch.object(cli, "reload_waybar"), redirect_stdout(StringIO()):
+            with patch.dict(os.environ, env, clear=False), patch.object(cli, "restart_waybar"), redirect_stdout(StringIO()):
                 self.assertEqual(cli.main(["--theme", "greenline"]), 0)
             self.assertEqual((root / "config/waybar/style.css").read_text(), (root / "themes/greenline.css").read_text())
             self.assertEqual(json.loads((root / "config/cyber-panel/config.json").read_text())["theme"], "greenline")

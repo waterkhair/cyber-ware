@@ -75,7 +75,7 @@ end
 assert(count("/cyber-wall' --set --restore") == 1, "saved wallpaper is restored once")
 assert(count("session-start.sh") == 1, "login helper is queued once, never on reload")
 assert(count("wl-paste' --watch") == 1, "clipboard watcher is not duplicated")
-assert(count("pkill -USR2") == 1, "running Waybar refreshes at login, not on unrelated config reloads")
+assert(count("pkill -USR2") == 0, "startup and reload must not recreate Waybar's MPRIS module in-process")
 assert(count("makoctl reload") == 3, "running Mako refreshes on startup and each config reload")
 assert(dispatches == 1, "workspace focus only happens at session startup")
 running.waybar = false

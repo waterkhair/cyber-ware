@@ -50,7 +50,7 @@ local function command_running(pattern)
     return result == "0"
 end
 
-local function start_if_available(command, executable, process_name, refresh_waybar)
+local function start_if_available(command, executable, process_name)
     local path = command_path(executable)
     if not path then return end
 
@@ -58,9 +58,7 @@ local function start_if_available(command, executable, process_name, refresh_way
         command = shell_quote(path) .. command:sub(#executable + 1)
     end
     if process_running(process_name or executable:match("([^/]+)$")) then
-        if refresh_waybar then
-            hl.exec_cmd("pkill -USR2 -x -- " .. shell_quote(process_name) .. " >/dev/null 2>&1 || true")
-        elseif process_name == "mako" and command_path("makoctl") then
+        if process_name == "mako" and command_path("makoctl") then
             hl.exec_cmd("makoctl reload >/dev/null 2>&1 || true")
         end
         return
@@ -68,10 +66,10 @@ local function start_if_available(command, executable, process_name, refresh_way
     hl.exec_cmd(command)
 end
 
-local function refresh_session_services(refresh_waybar)
-    -- Waybar already handles workspace events. Only explicitly refresh it at
-    -- login; theme/config installers perform their own reload when needed.
-    start_if_available("waybar", "waybar", "waybar", refresh_waybar)
+local function refresh_session_services()
+    -- Keep existing Waybar instances: an in-process reload can leave stale
+    -- MPRIS callbacks. cyber-panel restarts the process for theme/config changes.
+    start_if_available("waybar", "waybar", "waybar")
     start_if_available("mako", "mako", "mako")
     start_if_available("xsettingsd", "xsettingsd", "xsettingsd")
     start_if_available("env QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/hyprpolkitagent/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent", "hyprpolkitagent")
@@ -99,10 +97,10 @@ local function refresh_session_services(refresh_waybar)
 end
 
 hl.on("hyprland.start", function()
-    refresh_session_services(true)
+    refresh_session_services()
     hl.dispatch(hl.dsp.focus({ workspace = "1" }))
     -- The helper waits for compositor readiness and repairs portals outside
     -- the event loop. Personal login apps are handled by the local hook.
     hl.exec_cmd("sh " .. shell_quote(config_home .. "/hypr/hyprland/session-start.sh"))
 end)
-hl.on("config.reloaded", function() refresh_session_services(false) end)
+hl.on("config.reloaded", function() refresh_session_services() end)

@@ -4,12 +4,16 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import shutil
+import select
 import signal
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 THEMES = ("synthwave", "greenline", "husky")
@@ -76,31 +80,94 @@ def apply_theme(name: str, p: dict[str, Path], reload_bar: bool = True) -> None:
     atomic_write(p["waybar"] / "style.css", source.read_bytes())
     atomic_write(config, (json.dumps(current, indent=2) + "\n").encode(), 0o600)
     if reload_bar:
-        reload_waybar()
+        restart_waybar()
     print(f"Theme set to {name}.")
 
 
-def reload_waybar() -> None:
-    proc = Path("/proc")
-    signaled = 0
-    try:
-        entries = proc.iterdir()
-    except OSError:
-        return
-    for entry in entries:
+def _running_waybars() -> list[Path]:
+    instances = []
+    for entry in Path("/proc").iterdir():
         if not entry.name.isdigit():
             continue
         try:
-            executable = (entry / "comm").read_text(encoding="utf-8").strip()
-            if executable == "waybar":
-                os.kill(int(entry.name), signal.SIGUSR2)
-                signaled += 1
-        except (OSError, ProcessLookupError, PermissionError, ValueError):
+            if entry.stat().st_uid != os.getuid() or (entry / "comm").read_text().strip() != "waybar":
+                continue
+            env = _process_environment(entry)
+            if any(os.environ.get(key) and env.get(key) != os.environ[key]
+                   for key in ("WAYLAND_DISPLAY", "XDG_RUNTIME_DIR")):
+                continue
+            instances.append(entry)
+        except OSError:
             continue
-    if signaled:
-        print("Reloaded running Waybar instance(s).")
-    else:
-        print("Waybar is not running; the selected theme will apply next launch.")
+    return instances
+
+
+def _process_environment(entry: Path) -> dict[str, str]:
+    return dict(item.split("=", 1) for item in
+                os.fsdecode((entry / "environ").read_bytes()).split("\0") if "=" in item)
+
+
+def _restart_process(entry: Path, log) -> subprocess.Popen | None:
+    # A pidfd targets the original process even if its PID is later reused.
+    try:
+        handle = os.pidfd_open(int(entry.name))
+    except ProcessLookupError:
+        return None
+    try:
+        if select.select([handle], [], [], 0)[0]:
+            return None
+        args = [os.fsdecode(arg) for arg in (entry / "cmdline").read_bytes().split(b"\0") if arg]
+        executable = os.readlink(entry / "exe")
+        cwd = os.readlink(entry / "cwd")
+        env = _process_environment(entry)
+        if not args or not Path(executable).is_file() or not Path(cwd).is_dir():
+            raise RuntimeError("Cannot safely relaunch this Waybar process; restart it manually.")
+        signal.pidfd_send_signal(handle, signal.SIGTERM)
+        if not select.select([handle], [], [], 5)[0]:
+            raise RuntimeError("Waybar did not exit within 5 seconds; no duplicate was started.")
+        return subprocess.Popen(args, executable=executable, cwd=cwd, env=env,
+                                stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                                start_new_session=True, close_fds=True)
+    finally:
+        os.close(handle)
+
+
+def restart_waybar(start_if_missing: bool = False) -> None:
+    # Waybar 0.15.0's MPRIS callbacks can outlive a module after SIGUSR2.
+    # Restart the process so later player events cannot reach deleted widgets.
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        if start_if_missing:
+            raise RuntimeError("Run cyber-panel --restart from your graphical session.")
+        print("No graphical session; the selected theme will apply next launch.")
+        return
+    state = paths()["state"]
+    if state.is_symlink():
+        raise RuntimeError(f"Refusing symlinked state directory: {state}")
+    state.mkdir(parents=True, exist_ok=True)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW
+    with os.fdopen(os.open(state / "waybar-restart.lock", flags, 0o600), "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        instances = _running_waybars()
+        if not instances and not start_if_missing:
+            print("Waybar is not running; the selected theme will apply next launch.")
+            return
+        log_path = state / "waybar.log"
+        with os.fdopen(os.open(log_path, flags | os.O_APPEND, 0o600), "a") as log:
+            children = []
+            for entry in instances:
+                child = _restart_process(entry, log)
+                if child is not None:
+                    children.append(child)
+            if not instances:
+                executable = shutil.which("waybar")
+                if not executable or not os.environ.get("WAYLAND_DISPLAY"):
+                    raise RuntimeError("Start Waybar from your graphical session with waybar installed.")
+                children.append(subprocess.Popen([executable], stdin=subprocess.DEVNULL,
+                    stdout=log, stderr=log, start_new_session=True, close_fds=True))
+            time.sleep(0.2)
+            if any(child.poll() is not None for child in children):
+                raise RuntimeError(f"Waybar exited during startup; see {log_path}")
+        print(f"Waybar running after a clean restart; log: {log_path}")
 
 
 def show_status(p: dict[str, Path]) -> None:
@@ -169,6 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cyber-panel", description="Manage the cyber-panel Waybar setup.")
     parser.add_argument("--theme", nargs="?", const="", metavar="NAME", help="show the current theme or select synthwave/greenline/husky")
     parser.add_argument("--status", action="store_true", help="show install and theme status")
+    parser.add_argument("--restart", action="store_true", help="restart Waybar safely, or start it if stopped")
     parser.add_argument("--uninstall", action="store_true", help="restore previous Waybar files and uninstall")
     parser.add_argument("--purge", action="store_true", help="with --uninstall, also delete cyber-panel settings and recovery copies")
     args = parser.parse_args(argv)
@@ -183,6 +251,8 @@ def main(argv: list[str] | None = None) -> int:
                     print("Cancelled.")
                     return 1
             uninstall(p, args.purge)
+        elif args.restart:
+            restart_waybar(start_if_missing=True)
         elif args.theme is not None:
             if args.theme:
                 apply_theme(args.theme, p)

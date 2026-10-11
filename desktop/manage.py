@@ -69,7 +69,7 @@ PROMPT = '''# cyber-ware: compact prompt with path and Git status.
 function fish_prompt
     set -l last_status $status
     set_color $fish_color_cwd
-    printf '%s' (prompt_pwd)
+    printf '%s' (prompt_pwd --dir-length=0)
     set_color normal
     fish_git_prompt
     printf '\\n'

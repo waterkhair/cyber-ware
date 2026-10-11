@@ -82,9 +82,17 @@ cyber-panel --uninstall --purge     # restore, then remove settings and recovery
 cyber-panel --help
 ```
 
-Waybar is reloaded with `SIGUSR2` after a theme switch when a running instance
-is found. When Waybar is stopped, the chosen theme is used the next time it
-starts. Theme names and the config key use lowercase spelling.
+Waybar is restarted as a fresh process after a theme switch or installation
+when a running instance is found. This avoids stale MPRIS callbacks after an
+in-process `SIGUSR2` reload in Waybar 0.15.0. Existing arguments, working
+directory, and environment are retained; another user's or graphical session's
+bar is left alone. A restart waits for the previous process to exit before
+launching its replacement. The bar briefly disappears during the restart.
+When Waybar is stopped, the chosen theme is used the next time it starts.
+Run `cyber-panel --restart` to safely refresh it or recover a stopped bar.
+Logs are written to `~/.local/state/cyber-panel/waybar.log` (or `$XDG_STATE_HOME`).
+Use this command instead of sending `SIGUSR2` manually. MPRIS remains enabled
+for both radio and browser media. Theme names use lowercase spelling.
 
 Uninstall preserves cyber-panel settings and recovery copies by default. The
 `--purge` form requires typing `cyber-panel`; it removes those saved files only

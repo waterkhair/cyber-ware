@@ -28,7 +28,7 @@ fi
 
 PYTHONPATH="$project_dir/src${PYTHONPATH+:$PYTHONPATH}" python3 "$project_dir/src/cyber_panel/installer.py"
 
-# Reload only when the installer is running in the active graphical session.
-if command -v waybar >/dev/null 2>&1 && pgrep -x waybar >/dev/null 2>&1; then
-    kill -USR2 "$(pgrep -x waybar | head -n 1)" 2>/dev/null || true
+# Refresh a running bar without retaining stale MPRIS callbacks after SIGUSR2.
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    PYTHONPATH="$project_dir/src${PYTHONPATH+:$PYTHONPATH}" python3 -c 'from cyber_panel.cli import restart_waybar; restart_waybar()'
 fi
