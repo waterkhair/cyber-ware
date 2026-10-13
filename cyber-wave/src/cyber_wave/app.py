@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import gi
+import socket
+import socketserver
+import stat
+import threading
 from pathlib import Path
 
 gi.require_version("Gdk", "4.0")
@@ -10,7 +14,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango
 
-from .config import current_theme, save_config, validate_station
+from .config import current_theme, paths, save_config, validate_station
 from .player import status, toggle_selected
 
 
@@ -58,11 +62,32 @@ def display_player_state(actual: dict, pending: dict | None, now: float, pending
     return actual, None
 
 
-def hide_picker() -> bool:
-    """Hide the persistent picker using the same special-workspace toggle as its shortcut."""
-    from .cli import _dispatch
+class _ControlHandler(socketserver.StreamRequestHandler):
+    def handle(self) -> None:
+        action = self.rfile.readline(32).strip().decode("ascii", errors="ignore")
+        if action not in {"toggle", "show", "hide", "quit", "ping"}:
+            self.wfile.write(b"error\n")
+            return
+        if action == "ping":
+            self.wfile.write(b"ok\n")
+            return
+        application = self.server.application
+        if action == "quit":
+            GLib.idle_add(application.quit)
+        elif action == "toggle":
+            GLib.idle_add(application._toggle_picker_visibility)
+        else:
+            GLib.idle_add(application._set_picker_visible, action == "show")
+        self.wfile.write(b"ok\n")
 
-    return _dispatch("togglespecialworkspace", "Radio")
+
+class _ControlServer(socketserver.ThreadingUnixStreamServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+    def __init__(self, socket_path: Path, application):
+        self.application = application
+        super().__init__(str(socket_path), _ControlHandler)
 
 
 class CyberWavePicker(Gtk.Application):
@@ -82,6 +107,8 @@ class CyberWavePicker(Gtk.Application):
         self.url_entry: Gtk.Entry | None = None
         self.notice: Gtk.Label | None = None
         self.player_source: int | None = None
+        self.control_server: _ControlServer | None = None
+        self.control_path: Path | None = None
         self.pending_state: dict | None = None
         self.pending_since = 0.0
         self.player_state = {"url": None, "paused": False}
@@ -92,6 +119,7 @@ class CyberWavePicker(Gtk.Application):
             return
         self._load_css()
         self._build_window()
+        self._start_control_server()
         self.window.present()
         self._refresh_player_state()
         self.player_source = GLib.timeout_add(500, self._refresh_player_state)
@@ -246,8 +274,7 @@ class CyberWavePicker(Gtk.Application):
             self.search.set_text("")
             return True
         if action == "escape":
-            if not hide_picker():
-                self._set_notice("Could not hide the Radio workspace.")
+            self._set_picker_visible(False)
             return True
         return False
 
@@ -411,15 +438,57 @@ class CyberWavePicker(Gtk.Application):
             self.notice.set_text(message)
 
     def _close_request(self, *_args) -> bool:
-        if hide_picker():
-            return True
         self.quit()
+        return False
+
+    def _start_control_server(self) -> None:
+        runtime = paths()["runtime"]
+        if runtime.is_symlink():
+            raise RuntimeError(f"Refusing symlinked cyber-wave runtime directory: {runtime}")
+        runtime.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.control_path = runtime / "ui.sock"
+        if self.control_path.is_symlink():
+            raise RuntimeError(f"Refusing symlinked cyber-wave control socket: {self.control_path}")
+        if self.control_path.exists():
+            mode = self.control_path.lstat().st_mode
+            if not stat.S_ISSOCK(mode):
+                raise RuntimeError(f"Refusing to replace non-socket cyber-wave control path: {self.control_path}")
+            try:
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as active:
+                    active.settimeout(0.2)
+                    active.connect(str(self.control_path))
+                    active.sendall(b"ping\n")
+                    if active.recv(16).strip() == b"ok":
+                        raise RuntimeError("A cyber-wave control service is already running")
+            except (ConnectionError, TimeoutError, OSError):
+                self.control_path.unlink()
+        self.control_server = _ControlServer(self.control_path, self)
+        self.control_path.chmod(0o600)
+        threading.Thread(target=self.control_server.serve_forever, daemon=True).start()
+
+    def _set_picker_visible(self, visible: bool) -> bool:
+        if self.window is not None:
+            if visible:
+                self.window.present()
+            else:
+                self.window.set_visible(False)
+        return False
+
+    def _toggle_picker_visibility(self) -> bool:
+        if self.window is not None:
+            self._set_picker_visible(not self.window.get_visible())
         return False
 
     def do_shutdown(self) -> None:
         if self.player_source is not None:
             GLib.source_remove(self.player_source)
             self.player_source = None
+        if self.control_server is not None:
+            self.control_server.shutdown()
+            self.control_server.server_close()
+            self.control_server = None
+        if self.control_path is not None and self.control_path.exists() and not self.control_path.is_symlink():
+            self.control_path.unlink()
         Gtk.Application.do_shutdown(self)
 
 

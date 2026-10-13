@@ -5,6 +5,10 @@ three Fuzzel themes, `synthwave`, `greenline`, and `husky`, and an optional them
 clipboard history picker backed by cliphist. It works as a standalone
 cyber-ware component and does not install system packages.
 
+The name may be reused for a future terminal-dashboard redesign, but that has
+not been implemented. This component currently remains the Fuzzel launcher;
+any future redesign should incorporate this function or rename this command.
+
 ## Requirements
 
 - Fuzzel

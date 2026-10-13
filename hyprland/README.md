@@ -80,9 +80,11 @@ Hyprland session environment if you install them elsewhere.
 Then install the desired cyber-ware components and required system programs.
 The keybindings invoke `cyber-console`, `cyber-wall`, `cyber-scan`,
 `cyber-jackout`, `cyber-deck`, and `cyber-wave` when installed. `Ctrl+Super+R`
-toggles the cyber-wave picker on the `Radio` special workspace; it hides rather
-than closes the window, and its mpv stream continues playing. Super+V is
+toggles cyber-wave's regular floating window, and `Esc` hides it. `Ctrl+Super+X`
+closes the picker; its independent mpv stream continues playing. Super+V is
 registered when cyber-deck's optional clipboard history feature is enabled.
+Only the Games and Comms workspaces are special workspaces; cyber-wave is not
+assigned to one.
 The startup module launches shared desktop services such as Waybar and Mako.
 It also runs an optional personal hook at
 `~/.config/hypr/hyprland.local-session-start.sh` after portal recovery. Put

@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import re
+import socket
 import shutil
 import subprocess
 import sys
@@ -15,7 +16,6 @@ from pathlib import Path
 from .config import THEMES, current_theme, load_config, paths, set_theme
 
 CLASS = "org.cyber-ware.cyber-wave"
-SPECIAL = "Radio"
 
 
 def _clients() -> list[dict]:
@@ -30,9 +30,7 @@ def _clients() -> list[dict]:
 def _dispatch(*args: str) -> bool:
     if not args:
         return False
-    if args[0] == "togglespecialworkspace" and len(args) == 2:
-        expression = f"hl.dispatch(hl.dsp.workspace.toggle_special({json.dumps(args[1])}))"
-    elif args[0] == "closewindow" and len(args) == 2:
+    if args[0] == "closewindow" and len(args) == 2:
         address = args[1].removeprefix("address:")
         if not re.fullmatch(r"0x[0-9a-fA-F]+", address):
             return False
@@ -51,64 +49,27 @@ def _dispatch(*args: str) -> bool:
         return False
 
 
-def _ensure_picker_placement(client: dict) -> bool:
-    address = client.get("address")
-    if not isinstance(address, str) or not re.fullmatch(r"0x[0-9a-fA-F]+", address):
+def _control(action: str) -> bool:
+    sock_path = paths()["runtime"] / "ui.sock"
+    if sock_path.is_symlink():
         return False
-    encoded_address = json.dumps(address)
-    expression = (
-        "for _, w in ipairs(hl.get_windows()) do "
-        f"if w.address == {encoded_address} and w.class == {json.dumps(CLASS)} then "
-        f"hl.dispatch(hl.dsp.window.move({{workspace = {json.dumps('special:' + SPECIAL)}, follow = false, window = w}})); "
-        "hl.dispatch(hl.dsp.window.float({action = \"set\", window = w})); "
-        "hl.dispatch(hl.dsp.window.resize({x = 1050, y = 720, relative = false, window = w})); "
-        "hl.dispatch(hl.dsp.window.center({window = w})); break end end"
-    )
     try:
-        result = subprocess.run(["hyprctl", "eval", expression], capture_output=True, text=True, timeout=3)
-        return result.returncode == 0 and "error" not in result.stdout.lower()
-    except (OSError, subprocess.SubprocessError):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.settimeout(1.5)
+            client.connect(str(sock_path))
+            client.sendall(action.encode("ascii") + b"\n")
+            return client.recv(32).strip() == b"ok"
+    except (OSError, ValueError):
         return False
-
-
-def _focus_picker(client: dict) -> bool:
-    address = client.get("address")
-    if not isinstance(address, str) or not re.fullmatch(r"0x[0-9a-fA-F]+", address):
-        return False
-    expression = (
-        "for _, w in ipairs(hl.get_windows()) do "
-        f"if w.address == {json.dumps(address)} and w.class == {json.dumps(CLASS)} then "
-        "hl.dispatch(hl.dsp.focus({window = w})); break end end"
-    )
-    try:
-        result = subprocess.run(["hyprctl", "eval", expression], capture_output=True, text=True, timeout=3)
-        return result.returncode == 0 and "error" not in result.stdout.lower()
-    except (OSError, subprocess.SubprocessError):
-        return False
-
-
-def _radio_workspace_is_active() -> bool:
-    try:
-        result = subprocess.run(["hyprctl", "activeworkspace", "-j"], capture_output=True, text=True, timeout=2, check=True)
-        active = json.loads(result.stdout)
-    except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
-        return False
-    return isinstance(active, dict) and active.get("name") == "special:Radio"
 
 
 def toggle() -> int:
+    if _control("toggle"):
+        return 0
     clients = _clients()
     existing = next((c for c in clients if CLASS in (c.get("class"), c.get("initialClass"))), None)
     if existing:
-        if existing.get("workspace", {}).get("name") != f"special:{SPECIAL}" or not existing.get("floating"):
-            if not _ensure_picker_placement(existing):
-                raise RuntimeError("Could not place the picker on the floating Radio workspace")
-        was_visible = bool(existing.get("visible"))
-        if not _dispatch("togglespecialworkspace", SPECIAL):
-            raise RuntimeError("Could not toggle the Radio special workspace")
-        if not was_visible and not _focus_picker(existing):
-            raise RuntimeError("Picker is visible, but Hyprland could not focus it")
-        return 0
+        raise RuntimeError("A cyber-wave window is open without its control socket; close it with Ctrl+Super+X, then retry")
     p = paths()
     command = str(p["command"])
     subprocess.Popen(
@@ -119,16 +80,9 @@ def toggle() -> int:
         start_new_session=True,
         close_fds=True,
     )
-    deadline = time.monotonic() + 4
+    deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
-        clients = _clients()
-        client = next((c for c in clients if CLASS in (c.get("class"), c.get("initialClass"))), None)
-        if client is not None:
-            if not _radio_workspace_is_active():
-                if not _dispatch("togglespecialworkspace", SPECIAL):
-                    raise RuntimeError("Picker opened, but the Radio workspace could not be shown")
-                if not _focus_picker(client):
-                    raise RuntimeError("Picker opened, but Hyprland could not focus it")
+        if _control("ping"):
             return 0
         time.sleep(0.08)
     raise RuntimeError("GTK picker started, but Hyprland did not report the cyber-wave window")
@@ -159,6 +113,7 @@ def uninstall(purge: bool) -> int:
         return 1
     from .player import _request
     _request(["quit"])
+    _control("quit")
     for client in _clients():
         if CLASS in (client.get("class"), client.get("initialClass")) and client.get("address"):
             _dispatch("closewindow", f"address:{client['address']}")
@@ -178,6 +133,7 @@ def uninstall(purge: bool) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cyber-wave", description="Persistent floating internet-radio picker")
     parser.add_argument("--ui", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--hide", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--check", action="store_true", help="check required commands and station configuration")
     parser.add_argument("--theme", choices=THEMES, help="select the cyber-wave theme")
     parser.add_argument("--uninstall", action="store_true", help="remove cyber-wave, keeping configuration")
@@ -188,6 +144,10 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--purge requires --uninstall")
         if args.uninstall:
             return uninstall(args.purge)
+        if args.hide:
+            if not _control("hide"):
+                raise RuntimeError("Could not contact the running cyber-wave picker")
+            return 0
         if args.theme:
             set_theme(args.theme)
             print(f"cyber-wave theme set to {args.theme}.")

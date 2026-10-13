@@ -6,6 +6,16 @@ standalone tool lives in its own top-level directory, with its own code,
 dependencies, installer, and usage instructions. Users can install only the
 components they want.
 
+## Possible future direction
+
+A future redesign may replace the current `cyber-ware` umbrella experience with
+`cyber-deck` as the primary terminal dashboard for the toolkit. This is a
+planning idea only: the repository, installer, and component commands remain
+unchanged. The existing `cyber-deck` component is currently the Fuzzel
+application launcher and clipboard picker; any redesign will need to fold that
+functionality into the dashboard or rename the launcher to avoid a command
+collision.
+
 ## Components
 
 - [`cyber-wall/`](cyber-wall/README.md) — GTK image/video wallpaper picker for

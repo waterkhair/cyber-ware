@@ -1,11 +1,10 @@
 # cyber-wave
 
 `cyber-wave` is a keyboard-driven GTK internet radio picker for Hyprland. It opens
-in a dedicated floating GTK window on the `Radio` special workspace.
-`Ctrl+Super+R` shows and hides that window without terminating the picker or
-stopping playback. `Esc` hides the visible picker without quitting the GTK app;
-use `Ctrl+Super+R` to show it again. `mpv` runs independently, so playback
-continues while the picker is hidden.
+as a regular floating window on the current workspace. `Ctrl+Super+R` toggles
+visibility without terminating the picker or stopping playback; `Esc` hides it.
+`Ctrl+Super+X` closes the picker. `mpv` runs independently, so playback continues
+while the picker is hidden or closed.
 
 ## Requirements
 
@@ -109,9 +108,9 @@ is:
 hl.bind("CTRL + SUPER + R", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/cyber-wave"), { description = "Toggle internet radio picker" })
 ```
 
-The window class is `org.cyber-ware.cyber-wave`. Send it to a silent
-`special:Radio` workspace and float it; cyber-wave relies on that rule to keep
-the same picker alive while hidden.
+The window class is `org.cyber-ware.cyber-wave`. Float and center it with this
+rule. The application keeps a private control socket under
+`$XDG_RUNTIME_DIR/cyber-wave` so its command can hide/show the same window.
 
 For a traditional Hyprland configuration, the equivalent rule is:
 
@@ -119,7 +118,6 @@ For a traditional Hyprland configuration, the equivalent rule is:
 windowrule {
     name = cyber-wave-picker
     match:class = ^org\.cyber-ware\.cyber-wave$
-    workspace = special:Radio silent
     float = true
     size = 1050 720
     center = true

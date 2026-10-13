@@ -5,7 +5,6 @@ hl.workspace_rule({ workspace = "4", default_name = "Streaming", animation = "no
 hl.workspace_rule({ workspace = "5", default_name = "Manga", animation = "none" })
 hl.workspace_rule({ workspace = "special:Games", animation = "fade" })
 hl.workspace_rule({ workspace = "special:Comms", animation = "fade" })
-hl.workspace_rule({ workspace = "special:Radio", animation = "fade" })
 hl.workspace_rule({
     workspace = "1",
     default_name = "Deck",
@@ -47,7 +46,6 @@ hl.window_rule({
 hl.window_rule({
     name = "cyber-wave-floating-picker",
     match = { class = "^org\\.cyber-ware\\.cyber-wave$" },
-    workspace = "special:Radio silent",
     float = true,
     size = { 1050, 720 },
     center = true,
